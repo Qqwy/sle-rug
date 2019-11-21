@@ -18,10 +18,10 @@ syntax Question
   | Conditional; 
   
 syntax SimpleQuestion
- = Str Expr*;
+ = Str Declaration;
 
 syntax ComputedQuestion
- = Str;
+ = Str Definition;
  
 syntax Block
  = "{" Question* "}";
@@ -39,6 +39,13 @@ syntax IfThen
 
 syntax Condition
  = "(" Expr ")";
+ 
+ 
+syntax Definition
+ = Declaration "=" Expr;
+
+syntax Declaration
+ = Id ":" Type;
 
 // TODO: +, -, *, /, &&, ||, !, >, <, <=, >=, ==, !=, literals (bool, int, str)
 // Think about disambiguation using priorities and associativity
@@ -47,22 +54,25 @@ syntax Expr
   = Id \ "true" \ "false" // true/false are reserved keywords.
   | Literal
   | "!" Expr
-  | left Expr "+" Expr
-  | left Expr "*" Expr
-  | left Expr "-" Expr
-  | left Expr "/" Expr
-  | left Expr "&&" Expr
-  | left Expr "||" Expr
+  > left Expr "*" Expr
+  > left Expr "/" Expr
+  > left Expr "+" Expr
+  > left Expr "-" Expr
+  > left Expr "&&" Expr
+  > left Expr "||" Expr
   ;
 
-// What should this one be?
 syntax Type
-  = ;  
+  = "boolean"
+  | "integer"
+  | "string"
+  ;  
   
 syntax Literal
  = Str
  | Int
- | Bool;
+ | Bool
+ ;
 
 lexical Str = "\"" ("\\\""|![\"])*  "\"";
 
