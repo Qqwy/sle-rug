@@ -12,6 +12,7 @@ data AForm(loc src = |tmp:///|)
   ; 
 
 data AQuestion(loc src = |tmp:///|)
+  = 
   ; 
 
 data AExpr(loc src = |tmp:///|)
@@ -22,3 +23,7 @@ data AId(loc src = |tmp:///|)
   = id(str name);
 
 data AType(loc src = |tmp:///|);
+
+
+//TOASK: @foldable
+//loc after data
