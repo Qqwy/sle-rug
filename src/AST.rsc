@@ -26,4 +26,8 @@ data AExpr(loc src = |tmp:///|)
 data AId(loc src = |tmp:///|)
   = id(str name);
 
-data AType(loc src = |tmp:///|);
+data AType(loc src = |tmp:///|)
+  = boolean()
+  | string()
+  | integer()
+;

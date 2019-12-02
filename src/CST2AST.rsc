@@ -36,5 +36,10 @@ AExpr cst2ast(Expr e) {
 }
 
 AType cst2ast(Type t) {
-  throw "Not yet implemented";
+  switch(t) {
+    case (Type)`boolean`: return boolean();
+    case (Type)`string`: return string();
+    case (Type)`integer`: return integer();
+    default: throw "Unhandled type: <t>";
+  };
 }
