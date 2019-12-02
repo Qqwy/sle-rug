@@ -12,10 +12,15 @@ data AForm(loc src = |tmp:///|)
   ; 
 
 data AQuestion(loc src = |tmp:///|)
+  = simple_question(str name, tuple[str, str] declaration)
+  | computed_question(str name, tuple[str, str, str] definition)
   ; 
+  
 
 data AExpr(loc src = |tmp:///|)
   = ref(AId id)
+  | lit(str literal)
+  | plus(AExpr lhs, AExpr rhs)
   ;
 
 data AId(loc src = |tmp:///|)

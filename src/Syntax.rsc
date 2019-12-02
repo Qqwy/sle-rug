@@ -8,12 +8,12 @@ extend lang::std::Id;
  */
 
 start syntax Form 
-  = "form" Id "{" Question* "}"; 
+  = form: "form" Id "{" Question* "}"; 
 
 // TODO: question, computed question, block, if-then-else, if-then
 syntax Question
-  = SimpleQuestion
-  | ComputedQuestion
+  = simple_question: SimpleQuestion
+  | computed_question: ComputedQuestion
   | Block
   | Conditional; 
   
@@ -55,8 +55,8 @@ syntax Declaration
 // Think about disambiguation using priorities and associativity
 // and use C/Java style precedence rules (look it up on the internet)
 syntax Expr 
-  = Id \ "true" \ "false" // true/false are reserved keywords.
-  > Literal
+  = ref: OurId \ "true" \ "false" // true/false are reserved keywords.
+  > lit: Literal
   > "(" Expr ")" 
   > "!" Expr
   > left Expr "\>" Expr
@@ -67,7 +67,7 @@ syntax Expr
   | left Expr "!=" Expr
   > left Expr "*" Expr
   | left Expr "/" Expr
-  > left Expr "+" Expr
+  > left plus:  Expr "+" Expr
   | left Expr "-" Expr
   > left Expr "&&" Expr
   > left Expr "||" Expr
@@ -92,5 +92,6 @@ lexical Int
 
 lexical Bool = "true" | "false";
 
-
+syntax OurId
+  = id: Id;
 
