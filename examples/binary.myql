@@ -18,7 +18,7 @@ form binary {
         if (x_3_4) { 
           "The answer is" answer_3_4: integer = (3)
         }
-        else { 
+        else {  
           "The answer is" answer_4_5: integer = (4)
         }
       }

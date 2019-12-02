@@ -57,18 +57,18 @@ syntax Declaration
 syntax Expr 
   = Id \ "true" \ "false" // true/false are reserved keywords.
   > Literal
-  > left Expr "\>" Expr
-  > left Expr "\<" Expr
-  > left Expr "\<=" Expr
-  > left Expr "\>=" Expr
-  > left Expr "==" Expr
-  > left Expr "!=" Expr
   > "(" Expr ")" 
   > "!" Expr
+  > left Expr "\>" Expr
+  | left Expr "\<" Expr
+  | left Expr "\<=" Expr
+  | left Expr "\>=" Expr
+  | left Expr "==" Expr
+  | left Expr "!=" Expr
   > left Expr "*" Expr
-  > left Expr "/" Expr
+  | left Expr "/" Expr
   > left Expr "+" Expr
-  > left Expr "-" Expr
+  | left Expr "-" Expr
   > left Expr "&&" Expr
   > left Expr "||" Expr
   ;
