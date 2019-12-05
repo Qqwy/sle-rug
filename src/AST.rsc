@@ -14,8 +14,15 @@ data AForm(loc src = |tmp:///|)
 data AQuestion(loc src = |tmp:///|)
   = simple_question(str name, tuple[str, str] declaration)
   | computed_question(str name, tuple[str, str, str] definition)
+  | block(list[AQuestion] questions)
+  | conditional(Conditional c)
   ; 
-  
+
+
+data Conditional(loc src = |tmp:///|)
+  = \if(AExpr condition, list[AQuestion] questions)
+  | ifelse(AExpr condition, list[AQuestion] ifQuestions, list[AQuestion] elseQuestions)
+  ;
 
 data AExpr(loc src = |tmp:///|)
   = ref(AId id)

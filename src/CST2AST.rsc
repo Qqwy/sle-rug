@@ -21,6 +21,10 @@ AForm cst2ast(start[Form] sf) {
   return form("", [], src=f@\loc); 
 }
 
+AQuestion cst2ast((SimpleQuestion)`<Str name> <Id id> : <Type ftype>`) {
+	return simple_question("<name>", <"<id>","<ftype>">);
+}
+
 AQuestion cst2ast(Question q) {
   throw "Not yet implemented";
 }

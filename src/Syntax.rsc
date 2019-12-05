@@ -12,8 +12,8 @@ start syntax Form
 
 // TODO: question, computed question, block, if-then-else, if-then
 syntax Question
-  = simple_question: SimpleQuestion
-  | computed_question: ComputedQuestion
+  = SimpleQuestion
+  | ComputedQuestion
   | Block
   | Conditional; 
   
