@@ -59,18 +59,24 @@ syntax Expr
   > lit: Literal
   > "(" Expr ")" 
   > "!" Expr
-  > left  Expr "\>" Expr
-  | left Expr "\<" Expr
-  | left Expr "\<=" Expr
-  | left Expr "\>=" Expr
-  | left Expr "==" Expr
-  | left Expr "!=" Expr
-  > left Expr "*" Expr
-  | left Expr "/" Expr
-  > left plus:  Expr "+" Expr
-  | left Expr "-" Expr
+  > left (
+    Expr "*" Expr
+  | Expr "/" Expr
+  )
+  > left ( 
+    Expr "+" Expr
+  | Expr "-" Expr
+  )
   > left Expr "&&" Expr
   > left Expr "||" Expr
+  > non-assoc (
+    Expr "\>" Expr
+  | Expr "\<" Expr
+  | Expr "\<=" Expr
+  | Expr "\>=" Expr
+  | Expr "==" Expr
+  | Expr "!=" Expr
+  )
   ;
 
 syntax Type
