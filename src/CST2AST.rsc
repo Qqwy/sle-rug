@@ -25,23 +25,25 @@ AQuestion cst2ast(Question q) {
   throw "Not yet implemented";
 }
 
+// TODO WM: Maybe refactor to separate function heads?
+//          Especially the `src=l@\loc` stuff seems repetitive.
 AExpr cst2ast(Expr e) {
   switch (e) {
-    case (Expr)`<Id x>`: return ref("<x>", src=x@\loc);
-    case (Expr)`<Literal lit>`: return lit("<lit>", src=l@\loc);
-    case (Expr)`!<Expr expr>`: return not(cst2ast(expr), src=l@\loc);
-    case (Expr)`<Expr lhs>*<Expr rhs>`: return mult(cst2ast(lhs), cst2ast(rhs), src=l@\loc);
-    case (Expr)`<Expr lhs>/<Expr rhs>`: return div(cst2ast(lhs), cst2ast(rhs), src=l@\loc);
-    case (Expr)`<Expr lhs>+<Expr rhs>`: return plus(cst2ast(lhs), cst2ast(rhs), src=l@\loc);
-    case (Expr)`<Expr lhs>-<Expr rhs>`: return minus(cst2ast(lhs), cst2ast(rhs), src=l@\loc);
-    case (Expr)`<Expr lhs>&&<Expr rhs>`: return and(cst2ast(lhs), cst2ast(rhs), src=l@\loc);
-    case (Expr)`<Expr lhs>||<Expr rhs>`: return or(cst2ast(lhs), cst2ast(rhs), src=l@\loc);
-    case (Expr)`<Expr lhs>\><Expr rhs>`: return gt(cst2ast(lhs), cst2ast(rhs), src=l@\loc);
-    case (Expr)`<Expr lhs>\<<Expr rhs>`: return lt(cst2ast(lhs), cst2ast(rhs), src=l@\loc);
-    case (Expr)`<Expr lhs>\<=<Expr rhs>`: return lte(cst2ast(lhs), cst2ast(rhs), src=l@\loc);
-    case (Expr)`<Expr lhs>\>=<Expr rhs>`: return gte(cst2ast(lhs), cst2ast(rhs), src=l@\loc);
-    case (Expr)`<Expr lhs>==<Expr rhs>`: return eq(cst2ast(lhs), cst2ast(rhs), src=l@\loc);
-    case (Expr)`<Expr lhs>!=<Expr rhs>`: return neq(cst2ast(lhs), cst2ast(rhs), src=l@\loc);
+    case (Expr)`<Id x>`: return ref(id(x), src=x@\loc);
+    case (Expr)`<Literal lit>`: return lit("<lit>", src=lit@\loc);
+    case (Expr)`!<Expr expr>`: return not(cst2ast(expr), src=e@\loc);
+    case (Expr)`<Expr lhs>*<Expr rhs>`: return mult(cst2ast(lhs), cst2ast(rhs), src=e@\loc);
+    case (Expr)`<Expr lhs>/<Expr rhs>`: return div(cst2ast(lhs), cst2ast(rhs), src=e@\loc);
+    case (Expr)`<Expr lhs>+<Expr rhs>`: return plus(cst2ast(lhs), cst2ast(rhs), src=e@\loc);
+    case (Expr)`<Expr lhs>-<Expr rhs>`: return minus(cst2ast(lhs), cst2ast(rhs), src=e@\loc);
+    case (Expr)`<Expr lhs>&&<Expr rhs>`: return and(cst2ast(lhs), cst2ast(rhs), src=e@\loc);
+    case (Expr)`<Expr lhs>||<Expr rhs>`: return or(cst2ast(lhs), cst2ast(rhs), src=e@\loc);
+    case (Expr)`<Expr lhs>\><Expr rhs>`: return gt(cst2ast(lhs), cst2ast(rhs), src=e@\loc);
+    case (Expr)`<Expr lhs>\<<Expr rhs>`: return lt(cst2ast(lhs), cst2ast(rhs), src=e@\loc);
+    case (Expr)`<Expr lhs>\<=<Expr rhs>`: return lte(cst2ast(lhs), cst2ast(rhs), src=e@\loc);
+    case (Expr)`<Expr lhs>\>=<Expr rhs>`: return gte(cst2ast(lhs), cst2ast(rhs), src=e@\loc);
+    case (Expr)`<Expr lhs>==<Expr rhs>`: return eq(cst2ast(lhs), cst2ast(rhs), src=e@\loc);
+    case (Expr)`<Expr lhs>!=<Expr rhs>`: return neq(cst2ast(lhs), cst2ast(rhs), src=e@\loc);
     
     default: throw "Unhandled expression: <e>";
   }
