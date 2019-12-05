@@ -31,8 +31,8 @@ data AExpr(loc src = |tmp:///|)
   | lt(AExpr lhs, AExpr rhs)
   | gte(AExpr lhs, AExpr rhs)
   | lte(AExpr lhs, AExpr rhs)
-  | eq(AExpr lhs, AExpr rhs)
-  | neq(AExpr lhs, AExpr rhs)
+  | equal(AExpr lhs, AExpr rhs)
+  | not_equal(AExpr lhs, AExpr rhs)
   ;
 
 data AId(loc src = |tmp:///|)
