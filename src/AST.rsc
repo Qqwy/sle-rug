@@ -20,14 +20,34 @@ data AQuestion(loc src = |tmp:///|)
 data AExpr(loc src = |tmp:///|)
   = ref(AId id)
   | lit(str literal)
+  | not(AExpr expr)
+  | mult(AExpr lhs, AExpr rhs)
+  | div(AExpr lhs, AExpr rhs)
   | plus(AExpr lhs, AExpr rhs)
+  | minus(AExpr lhs, AExpr rhs)
+  | and(AExpr lhs, AExpr rhs)
+  | or(AExpr lhs, AExpr rhs)
+  | gt(AExpr lhs, AExpr rhs)
+  | lt(AExpr lhs, AExpr rhs)
+  | gte(AExpr lhs, AExpr rhs)
+  | lte(AExpr lhs, AExpr rhs)
+  | eq(AExpr lhs, AExpr rhs)
+  | neq(AExpr lhs, AExpr rhs)
   ;
 
 data AId(loc src = |tmp:///|)
   = id(str name);
 
+<<<<<<< HEAD
 data AType(loc src = |tmp:///|);
 
 
 //TOASK: @foldable
 //loc after data
+=======
+data AType(loc src = |tmp:///|)
+  = boolean()
+  | string()
+  | integer()
+;
+>>>>>>> 8e15b6e0be6c3b32254ec090251c0e8ee9a2f65f
