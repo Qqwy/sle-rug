@@ -55,11 +55,11 @@ syntax Declaration
 // Think about disambiguation using priorities and associativity
 // and use C/Java style precedence rules (look it up on the internet)
 syntax Expr 
-  = ref: OurId \ "true" \ "false" // true/false are reserved keywords.
+  = ref: Id \ "true" \ "false" // true/false are reserved keywords.
   > lit: Literal
   > "(" Expr ")" 
   > "!" Expr
-  > left Expr "\>" Expr
+  > left  Expr "\>" Expr
   | left Expr "\<" Expr
   | left Expr "\<=" Expr
   | left Expr "\>=" Expr

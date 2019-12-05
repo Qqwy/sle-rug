@@ -20,6 +20,7 @@ data AQuestion(loc src = |tmp:///|)
 data AExpr(loc src = |tmp:///|)
   = ref(AId id)
   | lit(str literal)
+  | gt(AExpr lhs, AExpr rhs)
   | plus(AExpr lhs, AExpr rhs)
   ;
 
