@@ -38,16 +38,8 @@ data AExpr(loc src = |tmp:///|)
 data AId(loc src = |tmp:///|)
   = id(str name);
 
-<<<<<<< HEAD
-data AType(loc src = |tmp:///|);
-
-
-//TOASK: @foldable
-//loc after data
-=======
 data AType(loc src = |tmp:///|)
   = boolean()
   | string()
   | integer()
 ;
->>>>>>> 8e15b6e0be6c3b32254ec090251c0e8ee9a2f65f
