@@ -10,7 +10,6 @@ extend lang::std::Id;
 start syntax Form 
   = form: "form" Id "{" Question* "}"; 
 
-// TODO: question, computed question, block, if-then-else, if-then
 syntax Question
   = SimpleQuestion
   | ComputedQuestion
@@ -100,4 +99,24 @@ lexical Bool = "true" | "false";
 
 syntax OurId
   = id: Id;
+
+
+
+// -- Syntax Unit tests: 
+test bool acceptsSimpleValidSyntax() {
+	parse(#Expr, "1 + 2");
+	parse(#Expr, "1 + 2 * 3");
+	parse(#Question, "\"foo\" var : integer");
+	return true;
+}
+
+test bool rejectsSimpleInvalidSyntax() {
+	try {
+		parse(#Question, "\"foo\" var : unexistenttype");
+		parse(#Expr, "1 \< 3 \<= 4"); // non-assoc operators
+		
+	}
+	catch ParseError(_): return true;
+	return false;
+}
 

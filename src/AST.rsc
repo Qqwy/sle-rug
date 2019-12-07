@@ -12,14 +12,14 @@ data AForm(loc src = |tmp:///|)
   ; 
 
 data AQuestion(loc src = |tmp:///|)
-  = simple_question(str name, tuple[str, str] declaration)
-  | computed_question(str name, tuple[str, str, str] definition)
+  = simple_question(str name, tuple[str, AType] declaration)
+  | computed_question(str name, tuple[str, AType, AExpr] definition)
   | block(list[AQuestion] questions)
-  | conditional(Conditional c)
+  | conditional(AConditional c)
   ; 
 
 
-data Conditional(loc src = |tmp:///|)
+data AConditional(loc src = |tmp:///|)
   = \if(AExpr condition, list[AQuestion] questions)
   | ifelse(AExpr condition, list[AQuestion] ifQuestions, list[AQuestion] elseQuestions)
   ;

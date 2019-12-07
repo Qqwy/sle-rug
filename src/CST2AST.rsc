@@ -21,12 +21,43 @@ AForm cst2ast(start[Form] sf) {
   return form("", [], src=f@\loc); 
 }
 
-AQuestion cst2ast((SimpleQuestion)`<Str name> <Id id> : <Type ftype>`) {
-	return simple_question("<name>", <"<id>","<ftype>">);
+
+AQuestion cst2ast(Question question) {
+  switch (question) {
+  	case (Question)`<SimpleQuestion q>`: return cst2ast(q);
+  	case (Question)`<ComputedQuestion q>`: return cst2ast(q);
+  	case (Question)`<Block b>`: return block(cst2ast(b));
+  	case (Question)`<Conditional c>`: return conditional(cst2ast(c));
+
+    default: throw "Unhandled question type: <question>";
+  }
 }
 
-AQuestion cst2ast(Question q) {
-  throw "Not yet implemented";
+AQuestion cst2ast((SimpleQuestion)`<Str name> <Id id> : <Type ftype>`) {
+	return simple_question("<name>", <"<id>",cst2ast(ftype)>);
+}
+
+
+AQuestion cst2ast((ComputedQuestion)`<Str name> <Id id> : <Type ftype> = <Expr expr>`) {
+	return computed_question("<name>", <"<id>",cst2ast(ftype), cst2ast(expr)>);
+}
+
+
+list[AQuestion] cst2ast((Block)`{<Question *questions>}`) {
+	return [cst2ast(question) | question <- questions];
+}
+
+AConditional cst2ast(Conditional c) {
+	switch(c) {
+		case (Conditional)`if <Condition cond><Block ifblock> else <Block elseblock>`: return ifelse(cst2ast(cond), cst2ast(ifblock), cst2ast(elseblock));
+		case (Conditional)`if <Condition cond><Block ifblock>`: return \if(cst2ast(cond), cst2ast(ifblock));
+	
+	    default: throw "Unhandled conditional: <c>";
+	}
+}
+
+AExpr cst2ast((Condition)`(<Expr e>)`) {
+	return cst2ast(e);
 }
 
 // TODO WM: Maybe refactor to separate function heads?
@@ -60,4 +91,20 @@ AType cst2ast(Type t) {
     case (Type)`integer`: return integer();
     default: throw "Unhandled type: <t>";
   };
+}
+
+
+// -- AST Unit tests:
+test bool simpleParsingExamples() {
+	assert plus(lit(_), lit(_)) := cst2ast(parse(#Expr, "2 + 3"));
+	assert mult(lit(_), lit(_)) := cst2ast(parse(#Expr, "2 * 3"));
+	assert plus(lit(_), mult(lit(_), lit(_))) := cst2ast(parse(#Expr, "1 + 2 * 3"));
+	assert plus(mult(lit(_), lit(_)), lit(_)) := cst2ast(parse(#Expr, "1 * 2 + 3"));
+	assert simple_question(_, <_, _>) := cst2ast(parse(#Question, "\"foo\" val : integer"));
+	assert computed_question(_, <_, _, _>) := cst2ast(parse(#Question, "\"foo\" val : integer = 42"));
+	assert block(_) := cst2ast(parse(#Question, "{}"));
+	assert block([block([])]) := cst2ast(parse(#Question, "{{}}"));
+	assert \if(_, _) := cst2ast(parse(#Conditional, "if (1) {\"bar\" bar : integer = 33}"));
+	assert \ifelse(_, _, _) := cst2ast(parse(#Conditional, "if (1) {} else {\"bar\" bar : integer = 33}"));
+	return true;
 }
