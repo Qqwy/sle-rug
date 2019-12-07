@@ -17,8 +17,13 @@ import String;
  */
 
 AForm cst2ast(start[Form] sf) {
-  Form f = sf.top; // remove layout before and after form
-  return form("", [], src=f@\loc); 
+//  Form f = sf.top; // remove layout before and after form
+//  return form("", [], src=f@\loc); 
+	return cst2ast(sf.top);
+}
+
+AForm cst2ast((Form)`form <Id name> { <Question* questions> }`) {
+  return form("<name>", [cst2ast(question) | question <- questions]); 
 }
 
 
@@ -64,7 +69,8 @@ AExpr cst2ast((Condition)`(<Expr e>)`) {
 //          Especially the `src=l@\loc` stuff seems repetitive.
 AExpr cst2ast(Expr e) {
   switch (e) {
-    case (Expr)`<Id x>`: return ref(id(x), src=x@\loc);
+	case (Expr)`(<Expr expr>)`: return cst2ast(expr, src=e@\loc);
+    case (Expr)`<Id x>`: return ref(cst2ast(x), src=x@\loc);
     case (Expr)`<Literal literal>`: return lit("<literal>", src=literal@\loc);
     case (Expr)`!<Expr expr>`: return not(cst2ast(expr), src=e@\loc);
     case (Expr)`<Expr lhs>*<Expr rhs>`: return mult(cst2ast(lhs), cst2ast(rhs), src=e@\loc);
@@ -80,6 +86,7 @@ AExpr cst2ast(Expr e) {
     case (Expr)`<Expr lhs>==<Expr rhs>`: return equal(cst2ast(lhs), cst2ast(rhs), src=e@\loc);
     case (Expr)`<Expr lhs>!=<Expr rhs>`: return not_equal(cst2ast(lhs), cst2ast(rhs), src=e@\loc);
     
+    
     default: throw "Unhandled expression: <e>";
   }
 }
@@ -93,9 +100,14 @@ AType cst2ast(Type t) {
   };
 }
 
+AId cst2ast(Id x) {
+	return id("<x>");
+}
+
 
 // -- AST Unit tests:
 test bool simpleParsingExamples() {
+	assert ref(id(_)) := cst2ast(parse(#Expr, "myvariable"));
 	assert plus(lit(_), lit(_)) := cst2ast(parse(#Expr, "2 + 3"));
 	assert mult(lit(_), lit(_)) := cst2ast(parse(#Expr, "2 * 3"));
 	assert plus(lit(_), mult(lit(_), lit(_))) := cst2ast(parse(#Expr, "1 + 2 * 3"));
@@ -106,5 +118,6 @@ test bool simpleParsingExamples() {
 	assert block([block([])]) := cst2ast(parse(#Question, "{{}}"));
 	assert \if(_, _) := cst2ast(parse(#Conditional, "if (1) {\"bar\" bar : integer = 33}"));
 	assert \ifelse(_, _, _) := cst2ast(parse(#Conditional, "if (1) {} else {\"bar\" bar : integer = 33}"));
+	assert form(_, _) := cst2ast(parse(#Form, "form foo { \"x\" x : integer = 33}"));
 	return true;
 }

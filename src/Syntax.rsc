@@ -8,7 +8,7 @@ extend lang::std::Id;
  */
 
 start syntax Form 
-  = form: "form" Id "{" Question* "}"; 
+  = "form" Id "{" Question* "}"; 
 
 syntax Question
   = SimpleQuestion

@@ -1,0 +1,8 @@
+form taxOfficeExample {
+  "did you buy?" bought : boolean
+  "did you really buy?" bought2 : boolean
+  
+  if(bought && bought2) {
+    "did you really really buy?" bought3 : boolean
+  }
+}
