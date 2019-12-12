@@ -41,7 +41,14 @@ set[Message] check(AForm f, TEnv tenv, UseDef useDef) {
 // - duplicate labels should trigger a warning 
 // - the declared type computed questions should match the type of the expression.
 set[Message] check(AQuestion q, TEnv tenv, UseDef useDef) {
-  return {}; 
+  switch(q)  
+  {
+  	case simple_question(str name, AId variable, AType qtype, loc src):
+  		return {"Redeclaration of <variable.name> (<variable.src>) at <def>" | str x := variable.name,
+  		 <loc def, _, x, Type \type> <- tenv , \type != atype2type(qtype)};
+  
+  }
+  return {};
 }
 
 // Check operand compatibility with operators.
