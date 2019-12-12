@@ -34,14 +34,15 @@ Type atype2type(AType atype) {
 
 
 set[Message] check(AForm f, TEnv tenv, UseDef useDef) {
-  return {}; 
+  return { *check(q, tenv, useDef) | q <- f.questions };
 }
 
 // - produce an error if there are declared questions with the same name but different types.
 // - duplicate labels should trigger a warning 
 // - the declared type computed questions should match the type of the expression.
 set[Message] check(AQuestion q, TEnv tenv, UseDef useDef) {
-  return {}; 
+
+//  return {};
 }
 
 // Check operand compatibility with operators.
@@ -66,9 +67,24 @@ Type typeOf(AExpr e, TEnv tenv, UseDef useDef) {
       if (<u, loc d> <- useDef, <d, x, _, Type t> <- tenv) {
         return t;
       }
-    // etc.
+      // TODO disambugate between strings, booleans, ints
+      // by adding different types for the different kinds of literals.
+    case lit(str l): 	 	return tunknown();
+	case not(_): 			return tbool();
+	case mult(_, _): 		return tint();
+	case div(_, _): 		return tint();
+	case plus(_, _): 		return tint();
+	case minus(_,_): 		return tint();
+	case and(_,_): 			return tbool();
+	case or(_,_): 			return tbool();
+	case gt(_,_): 			return tbool();
+	case lt(_,_): 			return tbool();
+	case gte(_,_): 			return tbool();
+	case lte(_,_): 			return tbool();
+	case equal(_,_): 		return tbool();
+	case not_equal(_,_):	return tbool();
+	default: 				return tunknown(); 
   }
-  return tunknown(); 
 }
 
 /* 
