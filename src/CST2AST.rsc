@@ -38,13 +38,13 @@ AQuestion cst2ast(Question question) {
   }
 }
 
-AQuestion cst2ast(c: (SimpleQuestion)`<Str name> <Id id> : <Type ftype>`) {
-	return simple_question("<name>", <"<id>",cst2ast(ftype)>, src = c@\loc);
+AQuestion cst2ast(c: (SimpleQuestion)`<Str name> <Id id> : <Type qtype>`) {
+	return simple_question("<name>", cst2ast(id), cst2ast(qtype), src = c@\loc);
 }
 
 
 AQuestion cst2ast(c : (ComputedQuestion)`<Str name> <Id id> : <Type ftype> = <Expr expr>`) {
-	return computed_question("<name>", <"<id>",cst2ast(ftype), cst2ast(expr)>, src = c@\loc);
+	return computed_question("<name>", cst2ast(id), cst2ast(ftype), cst2ast(expr), src = c@\loc);
 }
 
 
@@ -112,8 +112,8 @@ test bool simpleParsingExamples() {
 	assert mult(lit(_), lit(_)) := cst2ast(parse(#Expr, "2 * 3"));
 	assert plus(lit(_), mult(lit(_), lit(_))) := cst2ast(parse(#Expr, "1 + 2 * 3"));
 	assert plus(mult(lit(_), lit(_)), lit(_)) := cst2ast(parse(#Expr, "1 * 2 + 3"));
-	assert simple_question(_, <_, _>) := cst2ast(parse(#Question, "\"foo\" val : integer"));
-	assert computed_question(_, <_, _, _>) := cst2ast(parse(#Question, "\"foo\" val : integer = 42"));
+	assert simple_question(_, _, _) := cst2ast(parse(#Question, "\"foo\" val : integer"));
+	assert computed_question(_, _, _, _) := cst2ast(parse(#Question, "\"foo\" val : integer = 42"));
 	assert block(_) := cst2ast(parse(#Question, "{}"));
 	assert block([block([])]) := cst2ast(parse(#Question, "{{}}"));
 	assert \if(_, _) := cst2ast(parse(#Conditional, "if (1) {\"bar\" bar : integer = 33}"));

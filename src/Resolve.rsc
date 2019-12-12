@@ -30,5 +30,5 @@ Use uses(AForm f) {
 }
 
 Def defs(AForm f) {
-  return { <s, f.src> | /simple_question(_, <str s, _>) := f }; 
+  return { <s.name, s.src> | /simple_question(_, AId s, _) := f } + { <s.name, s.src> | /computed_question(_, AId s, _, _) := f }; 
 }

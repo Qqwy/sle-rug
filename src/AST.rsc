@@ -12,8 +12,8 @@ data AForm(loc src = |tmp:///|)
   ; 
 
 data AQuestion(loc src = |tmp://|)
-  = simple_question(str name, tuple[str, AType] declaration)
-  | computed_question(str name, tuple[str, AType, AExpr] definition)
+  = simple_question(str name, AId variable, AType qtype)
+  | computed_question(str name, AId variable, AType qtype, AExpr definition)
   | block(list[AQuestion] questions)
   | conditional(AConditional c)
   ; 
