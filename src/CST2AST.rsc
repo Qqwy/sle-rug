@@ -38,13 +38,13 @@ AQuestion cst2ast(Question question) {
   }
 }
 
-AQuestion cst2ast((SimpleQuestion)`<Str name> <Id id> : <Type ftype>`) {
-	return simple_question("<name>", <"<id>",cst2ast(ftype)>);
+AQuestion cst2ast(c: (SimpleQuestion)`<Str name> <Id id> : <Type ftype>`) {
+	return simple_question("<name>", <"<id>",cst2ast(ftype)>, src = c@\loc);
 }
 
 
-AQuestion cst2ast((ComputedQuestion)`<Str name> <Id id> : <Type ftype> = <Expr expr>`) {
-	return computed_question("<name>", <"<id>",cst2ast(ftype), cst2ast(expr)>);
+AQuestion cst2ast(c : (ComputedQuestion)`<Str name> <Id id> : <Type ftype> = <Expr expr>`) {
+	return computed_question("<name>", <"<id>",cst2ast(ftype), cst2ast(expr)>, src = c@\loc);
 }
 
 
@@ -54,8 +54,8 @@ list[AQuestion] cst2ast((Block)`{<Question *questions>}`) {
 
 AConditional cst2ast(Conditional c) {
 	switch(c) {
-		case (Conditional)`if <Condition cond><Block ifblock> else <Block elseblock>`: return ifelse(cst2ast(cond), cst2ast(ifblock), cst2ast(elseblock));
-		case (Conditional)`if <Condition cond><Block ifblock>`: return \if(cst2ast(cond), cst2ast(ifblock));
+		case (Conditional)`if <Condition cond><Block ifblock> else <Block elseblock>`: return ifelse(cst2ast(cond), cst2ast(ifblock), cst2ast(elseblock), src = c@\loc);
+		case (Conditional)`if <Condition cond><Block ifblock>`: return \if(cst2ast(cond), cst2ast(ifblock), src = c@\loc);
 	
 	    default: throw "Unhandled conditional: <c>";
 	}
@@ -93,15 +93,15 @@ AExpr cst2ast(Expr e) {
 
 AType cst2ast(Type t) {
   switch(t) {
-    case (Type)`boolean`: return boolean();
-    case (Type)`string`: return string();
-    case (Type)`integer`: return integer();
+    case (Type)`boolean`: return boolean(src = t@\loc);
+    case (Type)`string`: return string(src = t@\loc);
+    case (Type)`integer`: return integer(src = t@\loc);
     default: throw "Unhandled type: <t>";
   };
 }
 
 AId cst2ast(Id x) {
-	return id("<x>");
+	return id("<x>", src=x@\loc);
 }
 
 
