@@ -107,8 +107,8 @@ AId cst2ast(Id x) {
 
 // -- AST Unit tests:
 test bool simpleParsingExamples() {
-	assert ref(id(_)) := cst2ast(parse(#Expr, "myvariable"));
-	assert plus(lit(_), lit(_)) := cst2ast(parse(#Expr, "2 + 3"));
+	assert ref(id()) := cst2ast(parse(#Expr, "myvariable"));
+	assert plus(lit("2"), lit("3")) := cst2ast(parse(#Expr, "2 + 3"));
 	assert mult(lit(_), lit(_)) := cst2ast(parse(#Expr, "2 * 3"));
 	assert plus(lit(_), mult(lit(_), lit(_))) := cst2ast(parse(#Expr, "1 + 2 * 3"));
 	assert plus(mult(lit(_), lit(_)), lit(_)) := cst2ast(parse(#Expr, "1 * 2 + 3"));

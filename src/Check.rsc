@@ -17,8 +17,21 @@ alias TEnv = rel[loc def, str name, str label, Type \type];
 // To avoid recursively traversing the form, use the `visit` construct
 // or deep match (e.g., `for (/question(...) := f) {...}` ) 
 TEnv collect(AForm f) {
-  return {}; 
+  return 
+    { <label.src, name, label.name, atype2type(qtype)> | q: /simple_question(str name, AId label, AType qtype) := f } 
+  + { <label.src, name, label.name, atype2type(qtype)> | q: /computed_question(str name, AId label, AType qtype, _) := f } ;
+  ;
 }
+
+Type atype2type(AType atype) {
+	switch(atype) {
+		case integer(): return tint();
+		case boolean(): return tbool();
+		case string(): return tstr();
+		default: throw "Unhandled type: <atype>";
+	}
+}
+
 
 set[Message] check(AForm f, TEnv tenv, UseDef useDef) {
   return {}; 
