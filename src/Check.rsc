@@ -3,6 +3,8 @@ module Check
 import AST;
 import Resolve;
 import Message; // see standard library
+import IO; //todo: remove
+
 
 data Type
   = tint()
@@ -41,8 +43,20 @@ set[Message] check(AForm f, TEnv tenv, UseDef useDef) {
 // - duplicate labels should trigger a warning 
 // - the declared type computed questions should match the type of the expression.
 set[Message] check(AQuestion q, TEnv tenv, UseDef useDef) {
-
-//  return {};
+  if (simple_question(_, AId variable, AType qtype) := q || 
+  	  computed_question(_, AId variable, AType qtype, _) := q)
+  	return {\type != atype2type(qtype) ? error("Redeclaration of <variable.name>", def) : 
+  	warning("Duplicate label of <variable.name>", def) | str x := variable.name,  
+  	<loc def, _, x, Type \type> <- tenv, def != variable.src};
+  
+  if (block(list[AQuestion] questions) := q ||
+  	conditional(\if(_, list[AQuestion] questions)) := q)
+  	return { *check(qt, tenv, useDef) | qt <- questions };
+  
+  if (conditional(ifelse(_, list[AQuestion] q1, list[AQuestion] q2)) := q)
+  	return { *check(qt, tenv, useDef) | qt <- q1 + q2 };
+  
+  return {};
 }
 
 // Check operand compatibility with operators.

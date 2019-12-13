@@ -11,7 +11,7 @@ data AForm(loc src = |tmp:///|)
   = form(str name, list[AQuestion] questions)
   ; 
 
-data AQuestion(loc src = |tmp://|)
+data AQuestion(loc src = |tmp:///|)
   = simple_question(str name, AId variable, AType qtype)
   | computed_question(str name, AId variable, AType qtype, AExpr definition)
   | block(list[AQuestion] questions)
