@@ -20,11 +20,11 @@ data Type
 // the type environment consisting of defined questions in the form 
 alias TEnv = rel[loc def, str name, str label, Type \type];
 
-// To avoid recursively traversing the form, use the `visit` construct
-// or deep match (e.g., `for (/question(...) := f) {...}` ) 
+// Deep matches on the AST nodes of questions
+// to collect their definitions, which together make up the type environment.
 TEnv collect(AForm f) {
   return 
-    { <label.src, name, label.name, atype2type(qtype)> | q: /simple_question(str name, AId label, AType qtype) := f } 
+    { <label.src, name, label.name, atype2type(qtype)> | q: /simple_question(str name, AId label, AType qtype)      := f } 
   + { <label.src, name, label.name, atype2type(qtype)> | q: /computed_question(str name, AId label, AType qtype, _) := f } ;
   ;
 }
@@ -38,7 +38,14 @@ Type atype2type(AType atype) {
 	}
 }
 
-
+/* Performs a semantic check on the entire form:
+  - Prevents duplicate questions with different types.
+  - Warns for re-used labels (for questions with different types or names).
+  - Prevents operators receiving the wrong type of arguments.
+  - Prevents references that refer to questions that do not exist.
+  
+  TODO maybe check for cycles?
+*/
 set[Message] check(AForm f, TEnv tenv, UseDef useDef)
 	= check(f.questions, tenv, useDef);
 
@@ -47,36 +54,15 @@ set[Message] check(list[AQuestion] questions, TEnv tenv, UseDef useDef)
 	= { *check(q, tenv, useDef) | q <- questions };
 
 
-// - produce an error if there are declared questions with the same name but different types.
-// - duplicate labels should trigger a warning 
-// - the declared type computed questions should match the type of the expression.
-/*set[Message] check(AQuestion q, TEnv tenv, UseDef useDef) {
-  if (simple_question(_, AId variable, AType qtype) := q || 
-  	  computed_question(_, AId variable, AType qtype, _) := q)
-  	return {\type != atype2type(qtype) ? error("Redeclaration of <variable.name>", def) : 
-  	warning("Duplicate label of <variable.name>", def) | str x := variable.name,  
-  	<loc def, _, x, Type \type> <- tenv, def != variable.src};
-  
-  if (block(list[AQuestion] questions) := q ||
-  	conditional(\if(condition, list[AQuestion] questions)) := q)
-  	return { *check(qt, tenv, useDef) | qt <- questions } + check(condition, tenv, useDef);
-  
-  if (conditional(ifelse(condition, list[AQuestion] q1, list[AQuestion] q2)) := q)
-  	return { *check(qt, tenv, useDef) | qt <- q1 + q2 } + check(condition, tenv, useDef);
-  
-  return {};
-}*/
-
-
 set[Message] check(simple_question(str label, AId variable, AType qtype), TEnv tenv, UseDef useDef) 
 	= preventRedeclaration(variable, qtype, tenv)
 	+ warnIfDuplicateLabel(variable, label, tenv);
 
-// TODO check expression
 set[Message] check(computed_question(str label, AId variable, AType qtype, AExpr expr), TEnv tenv, UseDef useDef)
-	= preventRedeclaration(variable, qtype, tenv) 
+	= preventRedeclaration(variable, qtype, tenv)
 	+ warnIfDuplicateLabel(variable, label, tenv)
-	+ check(expr, tenv, useDef);
+	+ check(expr, tenv, useDef)
+	+ requireArgumentType(expr, atype2type(qtype), tenv, useDef);
 
 set[Message] check(block(list[AQuestion] questions), TEnv tenv, UseDef useDef)
 	= check(questions, tenv, useDef);
@@ -90,22 +76,32 @@ set[Message] check(conditional(\ifelse(condition, list[AQuestion] thenQuestions,
 	+ check(thenQuestions, tenv, useDef)
 	+ check(elseQuestions, tenv, useDef);
 
-// TODO maybe extract common definition lookup?
 set[Message] preventRedeclaration(AId variable, AType qtype, TEnv tenv)
 	= {
 	error("Redeclaration of <variable.name>", variable.src) 
-	| <loc def, _, x, Type \type> <- tenv
-	, def != variable.src 
-	, x == variable.name
+	| <loc def, _, x, Type \type> <- definitionsWithSameName(variable, tenv)
 	, \type != atype2type(qtype)
 	};
 
 set[Message] warnIfDuplicateLabel(AId variable, str label, TEnv tenv)
 	= { 
-	warning("Duplicate label of <variable.name>", def)
-	| <loc def, _, x, Type \type> <- tenv 
-	,def != variable.src 
+	warning("Duplicate label `<label>` in use for `<variable.name>`", def)
+	| <loc def, _, x, Type \type> <-  definitionsWithSameLabel(label, variable, tenv)
+	};
+
+TEnv definitionsWithSameName(AId variable, TEnv tenv)
+	= 
+	{ definition
+	| definition: <loc def, _, x, Type \type> <- tenv 
+	, def != variable.src 
 	, x == variable.name
+	};
+	
+TEnv definitionsWithSameLabel(str label, AId variable, TEnv tenv)
+	= 
+	{ definition
+	| definition: <loc def, label, _, Type \type> <- tenv 
+	, def != variable.src 
 	};
 
 // Check operand compatibility with operators.
@@ -276,3 +272,14 @@ test bool rejectQuestionReferenceOfDifferentType()
 		\"bar\" bar : integer = mybool + 2
 	}
 	");
+	
+test bool warnForDuplicateLabel()
+	= 
+	{ warning("Duplicate label `Do you want a cup of tea?` in use for `cupOfTea`", _)
+	, warning("Duplicate label `Do you want a cup of tea?` in use for `housePrice`", _)
+	} 
+	:= parseResolveCollectCheck("
+	form a {
+		\"Do you want a cup of tea?\" cupOfTea : boolean
+		\"Do you want a cup of tea?\" housePrice : integer
+	}");
