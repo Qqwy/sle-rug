@@ -5,6 +5,8 @@ import AST;
 
 import ParseTree;
 import String;
+extend lang::std::Id;
+
 
 /*
  * Implement a mapping from concrete syntax trees (CSTs) to abstract syntax trees (ASTs)
@@ -38,19 +40,18 @@ AQuestion cst2ast(Question question) {
   }
 }
 
-AQuestion cst2ast(c: (SimpleQuestion)`<Str name> <Id id> : <Type qtype>`) {
-	return simple_question("<name>", cst2ast(id), cst2ast(qtype), src = c@\loc);
-}
+AQuestion cst2ast(c: (SimpleQuestion)`<Str name> <Id id> : <Type qtype>`)
+	= simple_question("<name>"[1..-1], cst2ast(id), cst2ast(qtype), src = c@\loc);
 
 
-AQuestion cst2ast(c : (ComputedQuestion)`<Str name> <Id id> : <Type ftype> = <Expr expr>`) {
-	return computed_question("<name>", cst2ast(id), cst2ast(ftype), cst2ast(expr), src = c@\loc);
-}
+
+AQuestion cst2ast(c : (ComputedQuestion)`<Str name> <Id id> : <Type ftype> = <Expr expr>`)
+	= computed_question("<name>"[1..-1], cst2ast(id), cst2ast(ftype), cst2ast(expr), src = c@\loc);
 
 
-list[AQuestion] cst2ast((Block)`{<Question *questions>}`) {
-	return [cst2ast(question) | question <- questions];
-}
+list[AQuestion] cst2ast((Block)`{<Question *questions>}`)
+	= [cst2ast(question) | question <- questions];
+
 
 AConditional cst2ast(Conditional c) {
 	switch(c) {
@@ -61,9 +62,9 @@ AConditional cst2ast(Conditional c) {
 	}
 }
 
-AExpr cst2ast((Condition)`(<Expr e>)`) {
-	return cst2ast(e);
-}
+AExpr cst2ast((Condition)`(<Expr e>)`)
+	= cst2ast(e);
+
 
 // TODO WM: Maybe refactor to separate function heads?
 //          Especially the `src=l@\loc` stuff seems repetitive.
@@ -100,24 +101,48 @@ AType cst2ast(Type t) {
   };
 }
 
+
+
+
+// Tests: 
 AId cst2ast(Id x) {
 	return id("<x>", src=x@\loc);
 }
 
+&AST <: node parse2ast(type[&T<:Tree] begin, str input)
+	= cst2ast(parse(begin, input));
+	
 
-// -- AST Unit tests:
-test bool simpleParsingExamples() {
-	assert ref(id()) := cst2ast(parse(#Expr, "myvariable"));
-	assert plus(lit("2"), lit("3")) := cst2ast(parse(#Expr, "2 + 3"));
-	assert mult(lit(_), lit(_)) := cst2ast(parse(#Expr, "2 * 3"));
-	assert plus(lit(_), mult(lit(_), lit(_))) := cst2ast(parse(#Expr, "1 + 2 * 3"));
-	assert plus(mult(lit(_), lit(_)), lit(_)) := cst2ast(parse(#Expr, "1 * 2 + 3"));
-	assert simple_question(_, _, _) := cst2ast(parse(#Question, "\"foo\" val : integer"));
-	assert computed_question(_, _, _, _) := cst2ast(parse(#Question, "\"foo\" val : integer = 42"));
-	assert block(_) := cst2ast(parse(#Question, "{}"));
-	assert block([block([])]) := cst2ast(parse(#Question, "{{}}"));
-	assert \if(_, _) := cst2ast(parse(#Conditional, "if (1) {\"bar\" bar : integer = 33}"));
-	assert \ifelse(_, _, _) := cst2ast(parse(#Conditional, "if (1) {} else {\"bar\" bar : integer = 33}"));
-	assert form(_, _) := cst2ast(parse(#Form, "form foo { \"x\" x : integer = 33}"));
-	return true;
-}
+test bool parsesVariable()
+	= ref(AExpr::id("something")) := parse2ast(#Expr, "something");
+
+test bool parsesPlus(int lhs, int rhs)
+	= plus(AExpr::lit("<lhs>"), AExpr::lit("<rhs>")) := parse2ast(#Expr, "<lhs> + <rhs>");
+
+test bool parsesMinus(int lhs, int rhs)
+	= minus(AExpr::lit("<lhs>"), AExpr::lit("<rhs>")) := parse2ast(#Expr, "<lhs> - <rhs>");
+
+test bool parsesMult(int lhs, int rhs)
+	= mult(AExpr::lit("<lhs>"), AExpr::lit("<rhs>")) := parse2ast(#Expr, "<lhs> * <rhs>");
+
+test bool parsesSimpleQuestion()
+	= simple_question("foo", AExpr::id("val"), integer()) := parse2ast(#Question, "\"foo\" val : integer");
+
+test bool parsesComputedQuestion(int val)
+	= computed_question("foo", AExpr::id("varname"), integer(), AExpr::lit("<val>")) := parse2ast(#Question, "\"foo\" varname : integer = <val>");
+
+test bool parsesEmptyBlock()
+	= block(_) := parse2ast(#Question, "{}");
+
+test bool parsesNestedBlock()
+	= block([block([])]) := parse2ast(#Question, "{{}}");
+
+test bool parsesIf()
+	= \if(_, _) := parse2ast(#Conditional, "if (1) {\"bar\" bar : integer = 33}");
+
+test bool parsesIfElse()
+	= \ifelse(_, _, _) := parse2ast(#Conditional, "if (1) {} else {\"bar\" bar : integer = 33}");
+
+test bool parsesForm()
+	= form(_, _) := parse2ast(#Form, "form foo { \"x\" x : integer = 33}");
+	

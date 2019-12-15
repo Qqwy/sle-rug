@@ -129,3 +129,6 @@ test bool rejectNonAssocOperators()
 	= tryParseFail((){
 		parse(#Expr, "1 \< 3 \<= 4");
 	});
+	
+test bool rejectEmptyFileWithoutForm()
+	= tryParseFail((){parse(#start[Form], "");});
