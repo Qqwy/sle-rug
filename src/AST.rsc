@@ -26,7 +26,7 @@ data AConditional(loc src = |tmp:///|)
 
 data AExpr(loc src = |tmp:///|)
   = ref(AId id)
-  | lit(str literal)
+  | lit(ALit literal)
   | not(AExpr expr)
   | mult(AExpr lhs, AExpr rhs)
   | div(AExpr lhs, AExpr rhs)
@@ -43,10 +43,16 @@ data AExpr(loc src = |tmp:///|)
   ;
 
 data AId(loc src = |tmp:///|)
-  = id(str name);
+	= id(str name);
 
 data AType(loc src = |tmp:///|)
-  = boolean()
-  | string()
-  | integer()
-;
+	= boolean()
+	| string()
+	| integer()
+	;
+
+data ALit(loc src= |tmp:///|)
+	= lit_integer(int int_val)
+	| lit_boolean(bool bool_val)
+	| lit_string(str str_val)
+	;

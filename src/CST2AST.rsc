@@ -5,6 +5,7 @@ import AST;
 
 import ParseTree;
 import String;
+import ValueIO; // for parsing simple integers, strings and booleans.
 extend lang::std::Id;
 
 
@@ -41,12 +42,12 @@ AQuestion cst2ast(Question question) {
 }
 
 AQuestion cst2ast(c: (SimpleQuestion)`<Str name> <Id id> : <Type qtype>`)
-	= simple_question("<name>"[1..-1], cst2ast(id), cst2ast(qtype), src = c@\loc);
+	= simple_question(readTextValueString(#str, "<name>"), cst2ast(id), cst2ast(qtype), src = c@\loc);
 
 
 
 AQuestion cst2ast(c : (ComputedQuestion)`<Str name> <Id id> : <Type ftype> = <Expr expr>`)
-	= computed_question("<name>"[1..-1], cst2ast(id), cst2ast(ftype), cst2ast(expr), src = c@\loc);
+	= computed_question(readTextValueString(#str, "<name>"), cst2ast(id), cst2ast(ftype), cst2ast(expr), src = c@\loc);
 
 
 list[AQuestion] cst2ast((Block)`{<Question *questions>}`)
@@ -72,7 +73,9 @@ AExpr cst2ast(Expr e) {
   switch (e) {
 	case (Expr)`(<Expr expr>)`: return cst2ast(expr, src=e@\loc);
     case (Expr)`<Id x>`: return ref(cst2ast(x), src=x@\loc);
-    case (Expr)`<Literal literal>`: return lit("<literal>", src=literal@\loc);
+    case (Expr)`<Str literal>`: return lit(lit_string(readTextValueString(#str, "<literal>")), src=literal@\loc);
+    case (Expr)`<Int literal>`: return lit(lit_integer(readTextValueString(#int, "<literal>")), src=literal@\loc);
+    case (Expr)`<Bool literal>`: return lit(lit_boolean(readTextValueString(#bool, "<literal>")), src=literal@\loc);
     case (Expr)`!<Expr expr>`: return not(cst2ast(expr), src=e@\loc);
     case (Expr)`<Expr lhs>*<Expr rhs>`: return mult(cst2ast(lhs), cst2ast(rhs), src=e@\loc);
     case (Expr)`<Expr lhs>/<Expr rhs>`: return div(cst2ast(lhs), cst2ast(rhs), src=e@\loc);
@@ -117,19 +120,19 @@ test bool parsesVariable()
 	= ref(AExpr::id("something")) := parse2ast(#Expr, "something");
 
 test bool parsesPlus(int lhs, int rhs)
-	= plus(AExpr::lit("<lhs>"), AExpr::lit("<rhs>")) := parse2ast(#Expr, "<lhs> + <rhs>");
+	= plus(AExpr::lit(lit_integer(lhs)), AExpr::lit(lit_integer(rhs))) := parse2ast(#Expr, "<lhs> + <rhs>");
 
 test bool parsesMinus(int lhs, int rhs)
-	= minus(AExpr::lit("<lhs>"), AExpr::lit("<rhs>")) := parse2ast(#Expr, "<lhs> - <rhs>");
+	= minus(AExpr::lit(lit_integer(lhs)), AExpr::lit(lit_integer(rhs))) := parse2ast(#Expr, "<lhs> - <rhs>");
 
 test bool parsesMult(int lhs, int rhs)
-	= mult(AExpr::lit("<lhs>"), AExpr::lit("<rhs>")) := parse2ast(#Expr, "<lhs> * <rhs>");
+	= mult(AExpr::lit(lit_integer(lhs)), AExpr::lit(lit_integer(rhs))) := parse2ast(#Expr, "<lhs> * <rhs>");
 
 test bool parsesSimpleQuestion()
 	= simple_question("foo", AExpr::id("val"), integer()) := parse2ast(#Question, "\"foo\" val : integer");
 
 test bool parsesComputedQuestion(int val)
-	= computed_question("foo", AExpr::id("varname"), integer(), AExpr::lit("<val>")) := parse2ast(#Question, "\"foo\" varname : integer = <val>");
+	= computed_question("foo", AExpr::id("varname"), integer(), AExpr::lit(lit_integer(val))) := parse2ast(#Question, "\"foo\" varname : integer = <val>");
 
 test bool parsesEmptyBlock()
 	= block(_) := parse2ast(#Question, "{}");

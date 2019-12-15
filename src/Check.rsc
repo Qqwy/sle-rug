@@ -5,6 +5,10 @@ import Resolve;
 import Message; // see standard library
 import IO; //todo: remove
 
+import CST2AST; // For testing
+import Syntax; // For testing
+import ParseTree; // For testing
+
 
 data Type
   = tint()
@@ -63,54 +67,70 @@ set[Message] check(AQuestion q, TEnv tenv, UseDef useDef) {
 // E.g. for an addition node add(lhs, rhs), 
 //   the requirement is that typeOf(lhs) == typeOf(rhs) == tint()
 set[Message] check(AExpr e, TEnv tenv, UseDef useDef) {
-  set[Message] msgs = {};
-  
   switch (e) {
-    case ref(str x, src = loc u):
-      msgs += { error("Undeclared question", u) | useDef[u] == {} };
-    case not(AExpr inner):
-      msgs += { error("Non-boolean argument to `!`") | typeOf(inner, tenv, useDef) != tbool()};
-    case plus(AExpr lhs, AExpr rhs):
-    {
-      	msgs += {error("Incompatible left-hand side argument to `+`") | typeOf(lhs, tenv, useDef) != tint()};
-      	msgs += {error("Incompatible right-hand side argument to `+`") | typeOf(rhs, tenv, useDef) != tint()};
-	}
-    case minus(AExpr lhs, AExpr rhs):
-    {
-      	msgs += {error("Incompatible left-hand side argument to `-`") | typeOf(lhs, tenv, useDef) != tint()};
-      	msgs += {error("Incompatible right-hand side argument to `-`") | typeOf(rhs, tenv, useDef) != tint()};
-	}
-    // etc.
+    case ref(id(str x), src = loc u):			return requireQuestionDefined(x, u, tenv, useDef);
+    case not(AExpr inner):					return requireArgumentType(inner, tbool(), tenv, useDef);
+    case plus(AExpr lhs, AExpr rhs):	 	return requireBinOpTypes(lhs, rhs, tint(), tenv, useDef);
+    case minus(AExpr lhs, AExpr rhs): 		return requireBinOpTypes(lhs, rhs, tint(), tenv, useDef);
+    case mult(AExpr lhs, AExpr rhs): 		return requireBinOpTypes(lhs, rhs, tint(), tenv, useDef);
+    case div(AExpr lhs, AExpr rhs): 		return requireBinOpTypes(lhs, rhs, tint(), tenv, useDef);
+    case and(AExpr lhs, AExpr rhs): 		return requireBinOpTypes(lhs, rhs, tbool(), tenv, useDef);
+    case or(AExpr lhs, AExpr rhs): 			return requireBinOpTypes(lhs, rhs, tbool(), tenv, useDef);
+    case gt(AExpr lhs, AExpr rhs): 			return requireBinOpTypes(lhs, rhs, tbool(), tenv, useDef);
+    case lt(AExpr lhs, AExpr rhs): 			return requireBinOpTypes(lhs, rhs, tbool(), tenv, useDef);
+    case gte(AExpr lhs, AExpr rhs): 		return requireBinOpTypes(lhs, rhs, tbool(), tenv, useDef);
+    case lte(AExpr lhs, AExpr rhs): 		return requireBinOpTypes(lhs, rhs, tbool(), tenv, useDef);
+    case equal(AExpr lhs, AExpr rhs): 		return requireBinOpTypes(lhs, rhs, tbool(), tenv, useDef);
+    case not_equal(AExpr lhs, AExpr rhs): 	return requireBinOpTypes(lhs, rhs, tbool(), tenv, useDef);
+    
+    default: 								assert false : "Unhandled expression in semantic checking algorithm.";
   }
-  
-  return msgs;
 }
+
+set[Message] requireQuestionDefined(str name, loc u, TEnv tenv, UseDef useDef)
+	= { error("Reference to undefined question with name `<name>`", u) | useDef[u] == {} };
+
+set[Message] requireBinOpTypes(AExpr lhs, AExpr rhs, Type required_type, TEnv tenv, UseDef useDef) 
+	= requireArgumentType(lhs, required_type, tenv, useDef)
+	+ requireArgumentType(rhs, required_type, tenv, useDef);
+
+
+set[Message] requireArgumentType(AExpr expr, Type required_type, TEnv tenv, UseDef useDef)
+	= {error("Incompatible argument type", expr.src) | typeOf(expr, tenv, useDef) != required_type};
 
 Type typeOf(AExpr e, TEnv tenv, UseDef useDef) {
   switch (e) {
-    case ref(str x, src = loc u):  
-      if (<u, loc d> <- useDef, <d, x, _, Type t> <- tenv) {
-        return t;
-      }
-      // TODO disambugate between strings, booleans, ints
-      // by adding different types for the different kinds of literals.
-    case lit(str l): 	 	return tunknown();
-	case not(_): 			return tbool();
-	case mult(_, _): 		return tint();
-	case div(_, _): 		return tint();
-	case plus(_, _): 		return tint();
-	case minus(_,_): 		return tint();
-	case and(_,_): 			return tbool();
-	case or(_,_): 			return tbool();
-	case gt(_,_): 			return tbool();
-	case lt(_,_): 			return tbool();
-	case gte(_,_): 			return tbool();
-	case lte(_,_): 			return tbool();
-	case equal(_,_): 		return tbool();
-	case not_equal(_,_):	return tbool();
-	default: 				return tunknown(); 
+    case ref(id(str x), src = loc u):   return lookupReferenceType(x, u, tenv, useDef);
+    case lit(ALit l): 				return typeOf(l);
+	case not(_): 					return tbool();
+	case mult(_, _): 				return tint();
+	case div(_, _): 				return tint();
+	case plus(_, _): 				return tint();
+	case minus(_,_): 				return tint();
+	case and(_,_): 					return tbool();
+	case or(_,_): 					return tbool();
+	case gt(_,_): 					return tbool();
+	case lt(_,_): 					return tbool();
+	case gte(_,_): 					return tbool();
+	case lte(_,_): 					return tbool();
+	case equal(_,_): 				return tbool();
+	case not_equal(_,_):			return tbool();
+	default: 						return tunknown(); 
   }
 }
+
+Type lookupReferenceType(str x, loc u, TEnv tenv, UseDef useDef) {
+  if (<u, loc d> <- useDef, <d, x, _, Type t> <- tenv) {
+    return t;
+  } else {
+  	return tunknown();
+  }
+}
+
+Type typeOf(lit_integer(_)) = tint();
+Type typeOf(lit_boolean(_)) = tbool();
+Type typeOf(lit_string(_)) 	= tstr();
+
 
 /* 
  * Pattern-based dispatch style:
@@ -123,6 +143,51 @@ Type typeOf(AExpr e, TEnv tenv, UseDef useDef) {
  * default Type typeOf(AExpr _, TEnv _, UseDef _) = tunknown();
  *
  */
+
+// To use on individual expressions and other snippets.
+// Will not call 'resolve' or 'collect' so reference-based checks
+//  cannot be tested this way.
+set[Message] parseCheck(type[&T<:Tree] begin, str input) {
+	ast = parse2ast(begin, input);
+	return check(ast, {}, {});
+}
+
+// To use on a whole form
+set[Message] parseResolveCollectCheck(str input) {
+	ast = parse2ast(#start[Form], input);
+	return check(ast, collect(ast), resolve(ast).useDef);
+}
  
+test bool allowsPlusIntExpr()
+ 	 = {} := parseCheck(#Expr, "1 + 2");
+
+test bool rejectIntNotExpr()
+ 	 = {error("Incompatible argument type", _)} := parseCheck(#Expr, "!42");
+
  
+test bool rejectPlusBoolExpr()
+ 	 = {error("Incompatible argument type", _)} := parseCheck(#Expr, "1 + true");
+
+
+test bool rejectPlusBothBoolExpr()
+ 	 = {error("Incompatible argument type", _), error("Incompatible argument type", _)} := parseCheck(#Expr, "false + true");
+
+test bool rejectUndefinedQuestionReference()
+	= {error(_, _)} := parseCheck(#Expr, "myvariable");
+
+test bool allowDefinedQuestionReference()
+	= {} := parseResolveCollectCheck("
+	form a {
+		\"foo\" foo : integer
+		\"bar\" bar : integer = foo + 2
+	}
+	");
+
+test bool rejectUndefinedQuestionReference()
+	= {error(_, _)} := parseResolveCollectCheck("
+	form a {
+		\"foo\" foo : integer
+		\"bar\" bar : integer = baz + 2
+	}
+	");
 
