@@ -50,11 +50,11 @@ set[Message] check(AQuestion q, TEnv tenv, UseDef useDef) {
   	<loc def, _, x, Type \type> <- tenv, def != variable.src};
   
   if (block(list[AQuestion] questions) := q ||
-  	conditional(\if(_, list[AQuestion] questions)) := q)
-  	return { *check(qt, tenv, useDef) | qt <- questions };
+  	conditional(\if(condition, list[AQuestion] questions)) := q)
+  	return { *check(qt, tenv, useDef) | qt <- questions } + check(condition, tenv, useDef);
   
-  if (conditional(ifelse(_, list[AQuestion] q1, list[AQuestion] q2)) := q)
-  	return { *check(qt, tenv, useDef) | qt <- q1 + q2 };
+  if (conditional(ifelse(condition, list[AQuestion] q1, list[AQuestion] q2)) := q)
+  	return { *check(qt, tenv, useDef) | qt <- q1 + q2 } + check(condition, tenv, useDef);
   
   return {};
 }
@@ -68,7 +68,18 @@ set[Message] check(AExpr e, TEnv tenv, UseDef useDef) {
   switch (e) {
     case ref(str x, src = loc u):
       msgs += { error("Undeclared question", u) | useDef[u] == {} };
-
+    case not(AExpr inner):
+      msgs += { error("Non-boolean argument to `!`") | typeOf(inner, tenv, useDef) != tbool()};
+    case plus(AExpr lhs, AExpr rhs):
+    {
+      	msgs += {error("Incompatible left-hand side argument to `+`") | typeOf(lhs, tenv, useDef) != tint()};
+      	msgs += {error("Incompatible right-hand side argument to `+`") | typeOf(rhs, tenv, useDef) != tint()};
+	}
+    case minus(AExpr lhs, AExpr rhs):
+    {
+      	msgs += {error("Incompatible left-hand side argument to `-`") | typeOf(lhs, tenv, useDef) != tint()};
+      	msgs += {error("Incompatible right-hand side argument to `-`") | typeOf(rhs, tenv, useDef) != tint()};
+	}
     // etc.
   }
   

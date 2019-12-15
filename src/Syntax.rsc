@@ -100,23 +100,32 @@ lexical Bool = "true" | "false";
 syntax OurId
   = id: Id;
 
+test bool acceptsSimplePlus(int lhs, int rhs) 
+	= (Expr)`<Expr lhs> + <Expr rhs>` := parse(#Expr, "<lhs> + <rhs>");
+
+test bool acceptsSimpleMul(int lhs, int rhs, int mul) 
+	= (Expr)`<Expr lhs> + <Expr rhs> * <Expr mul>` := parse(#Expr, "<lhs> + <rhs> * <mul>");
+
+test bool acceptsSimpleQuestion(str name) 
+	= (Question) q := parse(#Question, "\"foo\" var : integer");
 
 
-// -- Syntax Unit tests: 
-test bool acceptsSimpleValidSyntax() {
-	parse(#Expr, "1 + 2");
-	parse(#Expr, "1 + 2 * 3");
-	parse(#Question, "\"foo\" var : integer");
-	return true;
-}
-
-test bool rejectsSimpleInvalidSyntax() {
+// Will succeed iff `test_function` raises a ParseError.
+bool tryParseFail(void () test_function) {
 	try {
-		parse(#Question, "\"foo\" var : unexistenttype");
-		parse(#Expr, "1 \< 3 \<= 4"); // non-assoc operators
-		
+		test_function();
 	}
 	catch ParseError(_): return true;
 	return false;
 }
 
+
+test bool rejectUnexistentType()
+	= tryParseFail((){
+		parse(#Question, "\"foo\" var : unexistenttype");		
+	});
+	
+test bool rejectNonAssocOperators()
+	= tryParseFail((){
+		parse(#Expr, "1 \< 3 \<= 4");
+	});

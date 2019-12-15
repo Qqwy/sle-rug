@@ -1,2 +1,3 @@
 form taxOfficeExample {
+"a" name : boolean = 10 + "foo"
 }
