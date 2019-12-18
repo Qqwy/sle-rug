@@ -215,10 +215,22 @@ test bool bottomUpGtStr(str x, str y)
 
 
 test bool simpleEvalOnce()
-	= evalOnceFromString("form a {
+	= ("foo": vint(42), "bar": vint(75)) == evalOnceFromString("form a {
 		\"foo\" foo : integer
 		if(foo \> 20) {
 			\"bar\" bar : integer = foo + 33
 		}
 	}
 	", "foo", vint(42));
+	
+
+test bool simpleEvalOnceConditional()
+	= ("foo": vint(-1), "bar": vint(999)) == evalOnceFromString("form a {
+		\"foo\" foo : integer
+		if(foo \> 20) {
+			\"bar\" bar : integer = foo + 33
+		} else {
+			\"bar\" bar : integer = foo + 1000
+		}
+	}
+	", "foo", vint(-1));
