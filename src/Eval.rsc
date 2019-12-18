@@ -3,6 +3,10 @@ module Eval
 import AST;
 import Resolve;
 
+// For testing:
+import CST2AST;
+import Syntax;
+
 /*
  * Implement big-step semantics for QL
  */
@@ -27,7 +31,19 @@ data Input
 // produce an environment which for each question has a default value
 // (e.g. 0 for int, "" for str etc.)
 VEnv initialEnv(AForm f) {
-  return ();
+  return 
+    ( label.name: atype2value(qtype) | q: /simple_question(_, AId label, AType qtype)      := f ) 
+  + ( label.name: atype2value(qtype) | q: /computed_question(_, AId label, AType qtype, _) := f ) ;
+  ;
+}
+
+Value atype2value(AType atype) {
+	switch(atype) {
+		case integer(): return vint(0);
+		case boolean(): return vbool(false);
+		case string(): return vstr("");
+		default: throw "Unhandled type: <atype>";
+	}
 }
 
 
@@ -58,3 +74,20 @@ Value eval(AExpr e, VEnv venv) {
     default: throw "Unsupported expression <e>";
   }
 }
+
+VEnv buildEnvFromInput(str input) {
+	ast = parse2ast(#start[Form], input);
+	return initialEnv(ast);
+}
+
+
+test bool buildSimpleEnv()
+	 = ("bar" : vint(0), "mybool" : vbool(false)) == buildEnvFromInput("form a {
+		\"foo\" mybool : boolean
+		if(mybool) {
+			\"bar\" bar : integer
+		}
+	}
+	");
+
+
