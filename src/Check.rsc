@@ -19,6 +19,11 @@ data Type
 
 // the type environment consisting of defined questions in the form 
 alias TEnv = rel[loc def, str name, str label, Type \type];
+
+// Since most function pass on both the Type Environment and the Used Definitions
+// to their inner functions without working on them in complex ways,
+// combining them to a single structure makes the code much more readable,
+// since now there is only as single thing being passed around everywhere..
 alias CheckEnv = tuple[TEnv tenv, UseDef useDef];
 
 // Deep matches on the AST nodes of questions
