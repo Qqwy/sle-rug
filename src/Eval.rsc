@@ -64,11 +64,14 @@ VEnv evalOnce(AForm f, Input inp, VEnv venv)
   = bottomUpEval(f, updateVenvWithInput(inp, venv));
 
 
-VEnv updateVenvWithInput(Input input(question, \value), VEnv venv)
-	= venv + (question : \value);
+VEnv updateVenvWithInput(input(str question, Value answer), VEnv venv)
+	= venv + (question : answer);
 
 VEnv bottomUpEval(AForm f, VEnv venv)
-	= (venv | bottomUpEval(question, it)  | question <- f.questions);
+	= bottomUpEval(f.questions, venv);
+
+VEnv bottomUpEval(list[AQuestion] questions, VEnv venv)
+	= (venv | bottomUpEval(question, it)  | question <- questions);
 
 // no-op for simple question
 VEnv bottomUpEval(simple_question(_, _, _), VEnv venv) 
@@ -76,11 +79,11 @@ VEnv bottomUpEval(simple_question(_, _, _), VEnv venv)
 
 // Evaluate expression for computed question.
 VEnv bottomUpEval(computed_question(_, variable, _, expr), VEnv venv)
-	= venv + (variable.name : bottomUpEval(expr, venv));
+	= venv + (variable.name : bottomUpEvalExpression(expr, venv));
 	
 // - evaluating the sub-questions for a block.
 VEnv bottomUpEval(block(list[AQuestion] questions), VEnv venv)
-	= (venv | bottomUpEval(question, it)  | question <- questions);
+	= bottomUpEval(questions, venv);
 
 // - evaluating the condition, and then the matching branch's sub-questions for conditionals.
 VEnv bottomUpEval(conditional(\if(condition, list[AQuestion] questions)), VEnv venv)
@@ -109,6 +112,10 @@ VEnv bottomUpEval(conditional(ifelse(condition, list[AQuestion] thenQuestions, l
            case not_equal(vinteger(int lhs), vinteger(int rhs)) => vbool(lhs != rhs)
      };
      */
+
+// Instead of unwrapping/wrapping all the time during execution,
+// we use Rascal's built-in type tree and type->value reification to tell when we expect a certain type.
+// Only at the outermost step of evaluating the expression we wrap it in a `Value` again.
 Value bottomUpEvalExpression(AExpr e, VEnv venv) {
 	switch(beer(#value, e, venv)) {
 		case int x: return vint(x);
@@ -117,33 +124,34 @@ Value bottomUpEvalExpression(AExpr e, VEnv venv) {
 	}
 }
 
+// 'beer' is shorthand for bottomUpEvalExpressionRaw.
 &Output beer(type[&Output] result, &Input e, VEnv venv) {
 	switch (e) {
-		case ref(id(str x)): return unwrapValue(venv[x]);
-		case lit(lit_integer(val)): return val;
-		case lit(lit_boolean(val)): return val;
-		case lit(lit_string(val)): return val;
-		case not(AExpr inner): return !beer(#bool, inner);
-		case plus(AExpr lhs, AExpr rhs): return beer(#int, lhs, venv) + beer(#int, rhs, venv);
-		case minus(AExpr lhs, AExpr rhs): return beer(#int, lhs, venv) - beer(#int, rhs, venv);
-		case mult(AExpr lhs, AExpr rhs): return beer(#int, lhs, venv) * beer(#int, rhs, venv);
-		case div(AExpr lhs, AExpr rhs): return beer(#int, lhs, venv) / beer(#int, rhs, venv);
-		case and(AExpr lhs, AExpr rhs): return beer(#bool, lhs, venv) && beer(#bool, rhs, venv);
-		case or(AExpr lhs, AExpr rhs): return beer(#bool, lhs, venv) || beer(#bool, rhs, venv);
-		case gt(AExpr lhs, AExpr rhs): return beer(#value, lhs, venv) > beer(#value, rhs, venv);
-		case lt(AExpr lhs, AExpr rhs): return beer(#value, lhs, venv) < beer(#value, rhs, venv);
-		case gte(AExpr lhs, AExpr rhs): return beer(#value, lhs, venv) >= beer(#value, rhs, venv);
-		case lte(AExpr lhs, AExpr rhs): return beer(#value, lhs, venv) <= beer(#value, rhs, venv);
-		case equal(AExpr lhs, AExpr rhs): return beer(#value, lhs, venv) == beer(#value, rhs, venv);
-		case not_equal(AExpr lhs, AExpr rhs): return beer(#value, lhs, venv) != beer(#value, rhs, venv);
+		case ref(id(str x)): 					return unwrapValue(result, venv[x]);
+		case lit(lit_integer(val)): 			return val;
+	case lit(lit_boolean(val)): 				return val;
+		case lit(lit_string(val)): 				return val;
+		case not(AExpr inner): 					return !beer(#bool, inner);
+		case plus(AExpr lhs, AExpr rhs): 		return beer(#int,   lhs, venv) +  beer(#int,   rhs, venv);
+		case minus(AExpr lhs, AExpr rhs): 		return beer(#int,   lhs, venv) -  beer(#int,   rhs, venv);
+		case mult(AExpr lhs, AExpr rhs): 		return beer(#int,   lhs, venv) *  beer(#int,   rhs, venv);
+		case div(AExpr lhs, AExpr rhs): 		return beer(#int,   lhs, venv) /  beer(#int,   rhs, venv);
+		case and(AExpr lhs, AExpr rhs): 		return beer(#bool,  lhs, venv) && beer(#bool,  rhs, venv);
+		case or(AExpr lhs, AExpr rhs): 			return beer(#bool,  lhs, venv) || beer(#bool,  rhs, venv);
+		case gt(AExpr lhs, AExpr rhs): 			return beer(#value, lhs, venv) >  beer(#value, rhs, venv);
+		case lt(AExpr lhs, AExpr rhs): 			return beer(#value, lhs, venv) <  beer(#value, rhs, venv);
+		case gte(AExpr lhs, AExpr rhs): 		return beer(#value, lhs, venv) >= beer(#value, rhs, venv);
+		case lte(AExpr lhs, AExpr rhs): 		return beer(#value, lhs, venv) <= beer(#value, rhs, venv);
+		case equal(AExpr lhs, AExpr rhs): 		return beer(#value, lhs, venv) == beer(#value, rhs, venv);
+		case not_equal(AExpr lhs, AExpr rhs): 	return beer(#value, lhs, venv) != beer(#value, rhs, venv);
 	};
 }
 
-value unwrapValue(Value val) {
+&Output unwrapValue(type[&Output] result, Value val) {
 	switch(val) {
-		case vint(x): return x;
+		case vint(x):  return x;
 		case vbool(x): return x;
-		case vstr(x): return x;
+		case vstr(x):  return x;
 	}
 }
 
@@ -154,21 +162,28 @@ VEnv eval(AQuestion q, Input inp, VEnv venv) {
   return ();
 }
 
-Value eval(AExpr e, VEnv venv) {
-  switch (e) {
-    case ref(str x): return venv[x];
-    
-    // etc.
-    
-    default: throw "Unsupported expression <e>";
-  }
-}
+//Value eval(AExpr e, VEnv venv) {
+//  switch (e) {
+//    case ref(str x): return venv[x];
+//    
+//    // etc.
+//    
+//    default: throw "Unsupported expression <e>";
+//  }
+//}
 
 VEnv buildEnvFromInput(str input) {
 	ast = parse2ast(#start[Form], input);
 	return initialEnv(ast);
 }
 
+
+VEnv evalOnceFromString(str inputForm, str questionToAlter, Value newValue) {
+	ast = parse2ast(#start[Form], inputForm);
+	env = initialEnv(ast);
+	inp = input(questionToAlter, newValue);
+	return evalOnce(ast, inp, env);
+}
 
 test bool buildSimpleEnv()
 	 = ("bar" : vint(0), "mybool" : vbool(false)) == buildEnvFromInput("form a {
@@ -199,4 +214,11 @@ test bool bottomUpGtStr(str x, str y)
 	= vbool(x > y) == bottomUpEvalExpression(gt(lit(lit_string(x)), lit(lit_string(y))), ());
 
 
-
+test bool simpleEvalOnce()
+	= evalOnceFromString("form a {
+		\"foo\" foo : integer
+		if(foo \> 20) {
+			\"bar\" bar : integer = foo + 33
+		}
+	}
+	", "foo", vint(42));
