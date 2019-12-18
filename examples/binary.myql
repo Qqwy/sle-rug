@@ -4,7 +4,7 @@ form binary {
     "Is the number between 1 and 5" x_1_5: boolean
     if (x_1_5) { 
       "Is the number between 1 and 3" x_1_3: boolean
-      if (x_1_3) { 
+      if (x_1_3) {
         "Is the number between 1 and 2" x_1_2: boolean
         if (x_1_2) { 
           "The answer is" answer_1_2: integer = (1)

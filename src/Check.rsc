@@ -19,6 +19,7 @@ data Type
 
 // the type environment consisting of defined questions in the form 
 alias TEnv = rel[loc def, str name, str label, Type \type];
+alias CheckEnv = tuple[TEnv tenv, UseDef useDef];
 
 // Deep matches on the AST nodes of questions
 // to collect their definitions, which together make up the type environment.
@@ -46,112 +47,115 @@ Type atype2type(AType atype) {
   
   TODO maybe check for cycles?
 */
-set[Message] check(AForm f, TEnv tenv, UseDef useDef)
-	= check(f.questions, tenv, useDef);
+set[Message] check(AForm f, CheckEnv checkEnv)
+	= check(f.questions, checkEnv);
 
 
-set[Message] check(list[AQuestion] questions, TEnv tenv, UseDef useDef)
-	= { *check(q, tenv, useDef) | q <- questions };
+set[Message] check(list[AQuestion] questions, CheckEnv checkEnv)
+	= { *check(q, checkEnv) | q <- questions };
 
 
-set[Message] check(simple_question(str label, AId variable, AType qtype), TEnv tenv, UseDef useDef) 
-	= preventRedeclaration(variable, qtype, tenv)
-	+ warnIfDuplicateLabel(variable, label, tenv);
+set[Message] check(simple_question(str label, AId variable, AType qtype), CheckEnv checkEnv) 
+	= preventRedeclaration(variable, qtype, checkEnv)
+	+ warnIfDuplicateLabel(variable, label, checkEnv);
 
-set[Message] check(computed_question(str label, AId variable, AType qtype, AExpr expr), TEnv tenv, UseDef useDef)
-	= preventRedeclaration(variable, qtype, tenv)
-	+ warnIfDuplicateLabel(variable, label, tenv)
-	+ check(expr, tenv, useDef)
-	+ requireArgumentType(expr, atype2type(qtype), tenv, useDef);
+set[Message] check(computed_question(str label, AId variable, AType qtype, AExpr expr), CheckEnv checkEnv)
+	= preventRedeclaration(variable, qtype, checkEnv)
+	+ warnIfDuplicateLabel(variable, label, checkEnv)
+	+ check(expr, checkEnv)
+	+ requireArgumentType(expr, atype2type(qtype), checkEnv);
 
-set[Message] check(block(list[AQuestion] questions), TEnv tenv, UseDef useDef)
-	= check(questions, tenv, useDef);
+set[Message] check(block(list[AQuestion] questions), CheckEnv checkEnv)
+	= check(questions, checkEnv);
 
-set[Message] check(conditional(\if(condition, list[AQuestion] questions)))
-	= check(condition, tenv, useDef)
-	+ check(questions, tenv, useDef);
+set[Message] check(conditional(\if(condition, list[AQuestion] questions)), CheckEnv checkEnv)
+	= requireArgumentType(condition, tbool(), checkEnv)
+	+ check(condition, checkEnv)
+	+ check(questions, checkEnv);
 
-set[Message] check(conditional(\ifelse(condition, list[AQuestion] thenQuestions, list[AQuestion] elseQuestions)))
-	= check(condition, tenv, useDef)
-	+ check(thenQuestions, tenv, useDef)
-	+ check(elseQuestions, tenv, useDef);
+set[Message] check(conditional(ifelse(condition, list[AQuestion] thenQuestions, list[AQuestion] elseQuestions)), CheckEnv checkEnv)
+	= requireArgumentType(condition, tbool(), checkEnv)
+	+ check(condition, checkEnv)
+	+ check(thenQuestions, checkEnv)
+	+ check(elseQuestions, checkEnv);
 
-set[Message] preventRedeclaration(AId variable, AType qtype, TEnv tenv)
+set[Message] preventRedeclaration(AId variable, AType qtype, CheckEnv checkEnv)
 	= {
 	error("Redeclaration of <variable.name>", variable.src) 
-	| <loc def, _, x, Type \type> <- definitionsWithSameName(variable, tenv)
+	| <loc def, _, x, Type \type> <- definitionsWithSameName(variable, checkEnv)
 	, \type != atype2type(qtype)
 	};
 
-set[Message] warnIfDuplicateLabel(AId variable, str label, TEnv tenv)
+set[Message] warnIfDuplicateLabel(AId variable, str label, CheckEnv checkEnv)
 	= { 
 	warning("Duplicate label `<label>` in use for `<variable.name>`", def)
-	| <loc def, _, x, Type \type> <-  definitionsWithSameLabel(label, variable, tenv)
+	| <loc def, _, x, Type \type> <-  definitionsWithSameLabel(label, variable, checkEnv)
 	};
 
-TEnv definitionsWithSameName(AId variable, TEnv tenv)
+TEnv definitionsWithSameName(AId variable, CheckEnv checkEnv)
 	= 
 	{ definition
-	| definition: <loc def, _, x, Type \type> <- tenv 
+	| definition: <loc def, _, x, Type \type> <- checkEnv.tenv 
 	, def != variable.src 
 	, x == variable.name
 	};
 	
-TEnv definitionsWithSameLabel(str label, AId variable, TEnv tenv)
+TEnv definitionsWithSameLabel(str label, AId variable, CheckEnv checkEnv)
 	= 
 	{ definition
-	| definition: <loc def, label, _, Type \type> <- tenv 
+	| definition: <loc def, label, _, Type \type> <- checkEnv.tenv 
 	, def != variable.src 
 	};
 
 // Check operand compatibility with operators.
 // E.g. for an addition node add(lhs, rhs), 
 //   the requirement is that typeOf(lhs) == typeOf(rhs) == tint()
-set[Message] check(AExpr e, TEnv tenv, UseDef useDef) {
+set[Message] check(AExpr e, CheckEnv checkEnv) {
   switch (e) {
-    case ref(id(str x), src = loc u):		return requireQuestionDefined(x, u, tenv, useDef);
+    case ref(id(str x), src = loc u):		return requireQuestionDefined(x, u,     checkEnv);
     case lit(_): 							return {};
-    case not(AExpr inner):					return checkUnaryOp(inner, tbool(), tenv, useDef);
-    case plus(AExpr lhs, AExpr rhs):	 	return checkBinaryOp(lhs, rhs, tint(), tenv, useDef);
-    case minus(AExpr lhs, AExpr rhs): 		return checkBinaryOp(lhs, rhs, tint(), tenv, useDef);
-    case mult(AExpr lhs, AExpr rhs): 		return checkBinaryOp(lhs, rhs, tint(), tenv, useDef);
-    case div(AExpr lhs, AExpr rhs): 		return checkBinaryOp(lhs, rhs, tint(), tenv, useDef);
-    case and(AExpr lhs, AExpr rhs): 		return checkBinaryOp(lhs, rhs, tbool(), tenv, useDef);
-    case or(AExpr lhs, AExpr rhs): 			return checkBinaryOp(lhs, rhs, tbool(), tenv, useDef);
-    case gt(AExpr lhs, AExpr rhs): 			return checkBinaryOp(lhs, rhs, tbool(), tenv, useDef);
-    case lt(AExpr lhs, AExpr rhs): 			return checkBinaryOp(lhs, rhs, tbool(), tenv, useDef);
-    case gte(AExpr lhs, AExpr rhs): 		return checkBinaryOp(lhs, rhs, tbool(), tenv, useDef);
-    case lte(AExpr lhs, AExpr rhs): 		return checkBinaryOp(lhs, rhs, tbool(), tenv, useDef);
-    case equal(AExpr lhs, AExpr rhs): 		return checkBinaryOp(lhs, rhs, tbool(), tenv, useDef);
-    case not_equal(AExpr lhs, AExpr rhs): 	return checkBinaryOp(lhs, rhs, tbool(), tenv, useDef);
+    case not(AExpr inner):					return checkUnaryOp(inner, tbool(),     checkEnv);
+    case plus(AExpr lhs, AExpr rhs):	 	return checkBinaryOp(lhs, rhs, tint(),  checkEnv);
+    case minus(AExpr lhs, AExpr rhs): 		return checkBinaryOp(lhs, rhs, tint(),  checkEnv);
+    case mult(AExpr lhs, AExpr rhs): 		return checkBinaryOp(lhs, rhs, tint(),  checkEnv);
+    case div(AExpr lhs, AExpr rhs): 		return checkBinaryOp(lhs, rhs, tint(),  checkEnv);
+    case and(AExpr lhs, AExpr rhs): 		return checkBinaryOp(lhs, rhs, tbool(), checkEnv);
+    case or(AExpr lhs, AExpr rhs): 			return checkBinaryOp(lhs, rhs, tbool(), checkEnv);
+    case gt(AExpr lhs, AExpr rhs): 			return checkBinaryOp(lhs, rhs, tint(),  checkEnv);
+    case lt(AExpr lhs, AExpr rhs): 			return checkBinaryOp(lhs, rhs, tint(),  checkEnv);
+    case gte(AExpr lhs, AExpr rhs): 		return checkBinaryOp(lhs, rhs, tint(),  checkEnv);
+    case lte(AExpr lhs, AExpr rhs): 		return checkBinaryOp(lhs, rhs, tint(),  checkEnv);
+    // TODO: Implement for string and boolean as well?
+    case equal(AExpr lhs, AExpr rhs): 		return checkBinaryOp(lhs, rhs, tint(),  checkEnv);
+    case not_equal(AExpr lhs, AExpr rhs): 	return checkBinaryOp(lhs, rhs, tint(),  checkENv);
     
     default: 								assert false : "Unhandled expression <e> in semantic checking algorithm.";
   }
 }
 
-set[Message] requireQuestionDefined(str name, loc u, TEnv tenv, UseDef useDef)
-	= { error("Reference to undefined question with name `<name>`", u) | useDef[u] == {} };
+set[Message] requireQuestionDefined(str name, loc u, CheckEnv checkEnv)
+	= { error("Reference to undefined question with name `<name>`", u) | checkEnv.useDef[u] == {} };
 
-set[Message] checkUnaryOp(AExpr inner, Type required_type, TEnv tenv, UseDef useDef)
-	= requireArgumentType(inner, required_type, tenv, useDef)
-	+ check(inner, tenv, useDef);
+set[Message] checkUnaryOp(AExpr inner, Type required_type, CheckEnv checkEnv)
+	= requireArgumentType(inner, required_type, checkEnv)
+	+ check(inner, checkEnv);
 
-set[Message] checkBinaryOp(AExpr lhs, AExpr rhs, Type required_type, TEnv tenv, UseDef useDef)
-	= requireBinOpTypes(lhs, rhs, required_type, tenv, useDef)
-	+ check(lhs, tenv, useDef)
-	+ check(rhs, tenv, useDef);
+set[Message] checkBinaryOp(AExpr lhs, AExpr rhs, Type required_type, CheckEnv checkEnv)
+	= requireBinOpTypes(lhs, rhs, required_type, checkEnv)
+	+ check(lhs, checkEnv)
+	+ check(rhs, checkEnv);
 
-set[Message] requireBinOpTypes(AExpr lhs, AExpr rhs, Type required_type, TEnv tenv, UseDef useDef) 
-	= requireArgumentType(lhs, required_type, tenv, useDef)
-	+ requireArgumentType(rhs, required_type, tenv, useDef);
+set[Message] requireBinOpTypes(AExpr lhs, AExpr rhs, Type required_type, CheckEnv checkEnv) 
+	= requireArgumentType(lhs, required_type, checkEnv)
+	+ requireArgumentType(rhs, required_type, checkEnv);
 
 
-set[Message] requireArgumentType(AExpr expr, Type required_type, TEnv tenv, UseDef useDef)
-	= {error("Incompatible argument type (expected `<print_type(required_type)>` but got `<print_type(real_type)>`)", expr.src) | real_type :=  typeOf(expr, tenv, useDef), real_type != required_type};
+set[Message] requireArgumentType(AExpr expr, Type required_type, CheckEnv checkEnv)
+	= {error("Incompatible argument type (expected `<print_type(required_type)>` but got `<print_type(real_type)>`)", expr.src) | real_type :=  typeOf(expr, checkEnv), real_type != required_type};
 
-Type typeOf(AExpr e, TEnv tenv, UseDef useDef) {
+Type typeOf(AExpr e, CheckEnv checkEnv) {
   switch (e) {
-    case ref(id(str x), src = loc u):   return lookupReferenceType(x, u, tenv, useDef);
+    case ref(id(str x), src = loc u):   return lookupReferenceType(x, u, checkEnv);
     case lit(ALit l): 					return typeOf(l);
 	case not(_): 						return tbool();
 	case mult(_, _): 					return tint();
@@ -171,8 +175,8 @@ Type typeOf(AExpr e, TEnv tenv, UseDef useDef) {
   }
 }
 
-Type lookupReferenceType(str x, loc u, TEnv tenv, UseDef useDef) {
-  if (<u, loc d> <- useDef, <d, _, x, Type t> <- tenv) {
+Type lookupReferenceType(str x, loc u, CheckEnv checkEnv) {
+  if (<u, loc d> <- checkEnv.useDef, <d, _, x, Type t> <- checkEnv.tenv) {
     return t;
   } else {
   	return tunknown();
@@ -205,7 +209,7 @@ str print_type(tunknown()) = "unknown";
 //  cannot be tested this way.
 set[Message] parseCheck(type[&T<:Tree] begin, str input) {
 	ast = parse2ast(begin, input);
-	return check(ast, {}, {});
+	return check(ast, <{}, {}>);
 }
 
 // To use on a whole form
@@ -218,7 +222,7 @@ set[Message] parseResolveCollectCheck(str input) {
 	// println(useDef);
 	TEnv collected = collect(ast);
 	// println(collected);
-	return check(ast, collect(ast), resolve(ast).useDef);
+	return check(ast, <collect(ast), resolve(ast).useDef>);
 }
  
 test bool allowsPlusIntExpr()
@@ -283,3 +287,30 @@ test bool warnForDuplicateLabel()
 		\"Do you want a cup of tea?\" cupOfTea : boolean
 		\"Do you want a cup of tea?\" housePrice : integer
 	}");
+	
+	
+test bool acceptSimpleConditional()
+	= 
+	{} := parseResolveCollectCheck("
+	form a {
+		\"foo\" mybool : boolean
+		if(mybool) {
+			\"bar\" bar : integer
+		}
+	}
+	");
+	
+test bool rejectNonbooleanConditional()
+	= 
+	{error("Incompatible argument type (expected `boolean` but got `integer`)", _)} 
+	:= parseResolveCollectCheck("
+	form a {
+		\"foo\" myint : integer
+		if(myint) {
+			\"bar\" bar : integer
+		}
+	}
+	");
+
+
+	
