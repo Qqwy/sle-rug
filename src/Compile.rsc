@@ -19,14 +19,85 @@ import lang::html5::DOM; // see standard library
  */
 
 void compile(AForm f) {
+try {
   writeFile(f.src[extension="js"].top, form2js(f));
-  writeFile(f.src[extension="html"].top, toString(form2html(f)));
+  //html = toString(htmlCompile(f));
+  writeFile(f.src[extension="css"].top, form2css(f));
+  writeFile(f.src[extension="html"].top, "\<!DOCTYPE html\>" + lang::html5::DOM::toString(htmlCompile(f, f.src)));
+  
+  } catch err: {
+  	println(err);
+  };
 }
 
-HTML5Node form2html(AForm f) {
-  return html();
+HTML5Node htmlCompile(AForm f, loc filename) {
+	str cssloc = filename[extension="css"].file;
+	str jsloc = filename[extension="js"].file;
+	println("beforebefore");
+	println(f.questions);
+	println("before");
+	println(lang::html5::DOM::toString(htmlCompile(f.questions)));
+	println("after");
+	HTML5Node res = 
+	html(
+		head(
+			link(\rel("stylesheet"), href(cssloc))
+		), 
+		body(
+			form(
+				name(f.name), 
+				action("#"), 
+				htmlCompile(f.questions)
+			),
+			script(src(jsloc))
+		)
+	);
+	println(res);
+	println("afterafter");
+	return res;
 }
+	//= html(
+	//	head(link(\rel("stylesheet"), href("./todo.css"))), 
+	//	body(
+	//		form(
+	//			name("ql-form"), action("#"), 
+	//			htmlCompile(f.questions)
+	//		)
+	//	)
+	//);
+
+HTML5Node htmlCompile(list[AQuestion] questions)
+  = div([htmlCompile(question)  | question <- questions]);
+
+// TODO: Disambugate between different types of questions here.
+HTML5Node htmlCompile(AQuestion question)
+  = div(
+  	html5attr("data-ql-question", "todoquestionname"),
+  	label(\for("todoquestionname"), "todoquestiontext"),
+	input(\type("text"))
+  	);
+
 
 str form2js(AForm f) {
-  return "";
+  return "var test = 42;";
+}
+
+str form2css(AForm f) {
+return "
+	input {
+	    margin: 1em;
+	}
+	
+	label {
+	    margin-top: 1.5em;
+	}
+	
+	
+	.hidden {
+	    display: none;
+	}";
+}
+
+str jsPreamble() {
+	return "";
 }

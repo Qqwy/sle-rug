@@ -1,7 +1,7 @@
 main();
 // TODO rather than defining on window, hide ql_questions scope by wrapping in anonymous function?
 function main() {
-    window.ql_questions = {foo: 0, bar: false, foo_c: 0};
+    initQuestions();
 
     window.addEventListener('load', setup);
 }
@@ -81,20 +81,6 @@ function dictsAreEquivalent(a, b) {
     return true;
 }
 
-
-// Updates all computed questions (and if-statements).
-function update(ql_questions) {
-    // To be filled by the compiler
-    // if(ql_questions["bar"]) {
-
-    // }
-
-    ql_questions["foo_c"] = ql_questions["foo"];
-    ql_questions["bar_c"] = !ql_questions["bar"];
-
-    return ql_questions;
-}
-
 function render(ql_questions) {
     for(prop in ql_questions) {
         console.log(prop);
@@ -123,4 +109,21 @@ function alterContentsOfComputedQuestions(prop, value) {
     affected_fields.forEach(function(field) {
         field.value = value;
     });
+}
+
+function initQuestions() {
+    window.ql_questions = {foo: 0, bar: false, foo_c: 0};
+}
+
+// Updates all computed questions (and if-statements).
+function update(ql_questions) {
+    // To be filled by the compiler
+    // if(ql_questions["bar"]) {
+
+    // }
+
+    ql_questions["foo_c"] = ql_questions["foo"];
+    ql_questions["bar_c"] = !ql_questions["bar"];
+
+    return ql_questions;
 }

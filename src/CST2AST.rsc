@@ -25,8 +25,8 @@ AForm cst2ast(start[Form] sf) {
 	return cst2ast(sf.top);
 }
 
-AForm cst2ast((Form)`form <Id name> { <Question* questions> }`) {
-  return form("<name>", [cst2ast(question) | question <- questions]); 
+AForm cst2ast(sf: (Form)`form <Id name> { <Question* questions> }`) {
+  return form("<name>", [cst2ast(question) | question <- questions], src = sf@\loc); 
 }
 
 

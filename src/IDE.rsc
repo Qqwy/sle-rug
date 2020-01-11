@@ -32,20 +32,20 @@ void main() {
         return t[@messages=msgs][@hyperlinks=useDef];
       }
       return t[@messages={error("Not a form", t@\loc)}];
-    })//,
+    }),
     
-    //builder(set[Message] (Tree t) {
-    //  if (start[Form] pt := t) {
-    //    AForm ast = cst2ast(pt);
-    //    UseDef useDef = resolve(ast).useDef;
-    //    set[Message] msgs = check(ast, collect(ast), useDef);
-    //    if (msgs == {}) {
-    //      compile(ast);
-    //    }
-    //    return msgs;
-    //  }
-    //  return {error("Not a form", t@\loc)};
-    //})
+    builder(set[Message] (Tree t) {
+      if (start[Form] pt := t) {
+        AForm ast = cst2ast(pt);
+        UseDef useDef = resolve(ast).useDef;
+        set[Message] msgs = check(ast, <collect(ast), useDef>);
+        if (msgs == {}) {
+          compile(ast);
+        }
+        return msgs;
+      }
+      return {error("Not a form", t@\loc)};
+    })
   };
   
   registerContributions(MyQL, contribs);
