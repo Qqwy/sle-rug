@@ -4,6 +4,7 @@ import AST;
 import Resolve;
 import IO;
 import lang::html5::DOM; // see standard library
+import List;
 
 /*
  * Implement a compiler for QL to HTML and Javascript
@@ -56,15 +57,7 @@ HTML5Node htmlCompile(AForm f, loc filename) {
 	println("afterafter");
 	return res;
 }
-	//= html(
-	//	head(link(\rel("stylesheet"), href("./todo.css"))), 
-	//	body(
-	//		form(
-	//			name("ql-form"), action("#"), 
-	//			htmlCompile(f.questions)
-	//		)
-	//	)
-	//);
+
 
 HTML5Node htmlCompile(list[AQuestion] questions)
   = div([htmlCompile(question)  | question <- questions]);
@@ -79,8 +72,15 @@ HTML5Node htmlCompile(AQuestion question)
 
 
 str form2js(AForm f) {
-  return "var test = 42;";
+  return "var test = 42; 
+  		 'var window.ql_questions = <jsQuestionBeginState(f.questions)>;";
 }
+
+str jsQuestionBeginState(list[AQuestion] questions)
+	= "{\n<intercalate(", \n", [ jsQuestionBeginState(question) | question <- questions])>\n}";
+
+str jsQuestionBeginState(AQuestion question)
+	= "a: 1";
 
 str form2css(AForm f) {
 return "
