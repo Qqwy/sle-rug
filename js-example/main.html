@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <link href="./main.css" rel="stylesheet"/>
+    </head>
+    <body>
+        <form action="#" class="ql-form">
+            <div data-ql-question="foo" data-ql-question-visible-when="bar">
+                <label for="foo">the foo</label>
+                <input name="foo" type="number" />
+            </div>
+
+            <div data-ql-question="bar">
+            <label for="bar">the bar</label>
+            <input name="bar" type="checkbox" />
+            </div>
+
+            <div data-ql-question="foo" data-computed-question="true">
+                <input name="foo" type="text" disabled="disabled" />
+            </div>
+        </form>
+
+        <script src="./main.js"></script>
+    </body>
+</html>
