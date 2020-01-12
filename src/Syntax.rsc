@@ -66,8 +66,6 @@ syntax Expr
     Expr "+" Expr
   | Expr "-" Expr
   )
-  > left Expr "&&" Expr
-  > left Expr "||" Expr
   > non-assoc (
     Expr "\>" Expr
   | Expr "\<" Expr
@@ -76,6 +74,8 @@ syntax Expr
   | Expr "==" Expr
   | Expr "!=" Expr
   )
+  > left Expr "&&" Expr
+  > left Expr "||" Expr
   ;
 
 syntax Type

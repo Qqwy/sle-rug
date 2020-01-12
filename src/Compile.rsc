@@ -58,7 +58,6 @@ HTML5Node htmlCompile(AForm f, loc filename) {
 			script(src(jsloc))
 		)
 	);
-	//println(res);
 	return res;
 }
 

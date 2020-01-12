@@ -1,10 +1,10 @@
 form taxOfficeExample {
-  "did you buy?" bought : boolean
-  "did you really buy?" bought2 : boolean
+  "did you buy?" bought : integer
+  "did you really buy?" bought2 : integer
   
-  if(bought && bought2) {
+  if(bought == 0 && bought2 == 1) {
     "did you really really buy?" bought3 : boolean
-    "some fun?" bought4 : boolean = bought && bought3
+    "some fun?" bought4 : boolean = bought == 0 && bought3
   }
 }
 
