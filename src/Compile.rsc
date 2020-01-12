@@ -7,10 +7,10 @@ import lang::html5::DOM; // see standard library
 import List; // intercalate
 import String; // escape
 
-import Syntax; // For tests only.
-import ParseTree; // For tests only.
-import CST2AST; // For tests only.
-import Check; // For tests only.
+import Syntax; 		// For tests only.
+import ParseTree; 	// For tests only.
+import CST2AST; 	// For tests only.
+import Check; 		// For tests only.
 
 /*
  * Implement a compiler for QL to HTML and Javascript
@@ -65,7 +65,6 @@ HTML5Node htmlCompile(AForm f, loc filename) {
 HTML5Node htmlCompile(list[AQuestion] questions)
   = div([htmlCompile(question)  | question <- questions]);
 
-// TODO: Disambugate between different types of questions here.
 HTML5Node htmlCompile(simple_question(str qname, AId var, AType qtype))
   = div(
   	html5attr("data-ql-question", var.name),
@@ -97,11 +96,9 @@ HTML5Node htmlCompile(conditional(\ifelse(AExpr condition, list[AQuestion] if_qu
 		)
 	);
 
-HTML5Node htmlCompile(AQuestion q) = span("TODO");
-
 str ATypeToHTMLInputType(boolean()) = "checkbox";
 str ATypeToHTMLInputType(integer()) = "number";
-str ATypeToHTMLInputType(string()) = "text";
+str ATypeToHTMLInputType(string())  = "text";
 
 
 str form2js(AForm f) {
