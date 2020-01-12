@@ -4,7 +4,8 @@ import AST;
 import Resolve;
 import IO;
 import lang::html5::DOM; // see standard library
-import List;
+import List; // intercalate
+import String; // escape
 
 import Syntax; // For tests only.
 import ParseTree; // For tests only.
@@ -64,12 +65,42 @@ HTML5Node htmlCompile(list[AQuestion] questions)
   = div([htmlCompile(question)  | question <- questions]);
 
 // TODO: Disambugate between different types of questions here.
-HTML5Node htmlCompile(AQuestion question)
+HTML5Node htmlCompile(simple_question(str qname, AId var, AType qtype))
   = div(
-  	html5attr("data-ql-question", "todoquestionname"),
-  	label(\for("todoquestionname"), "todoquestiontext"),
-	input(\type("text"))
+  	html5attr("data-ql-question", var.name),
+  	label(\for(var.name), qname),
+	input(\type(ATypeToHTMLInputType(qtype)), name(var.name))
   	);
+
+HTML5Node htmlCompile(computed_question(str qname, AId var, AType qtype, _))
+  = div(
+  	html5attr("data-ql-question", var.name),
+  	label(\for(var.name), qname),
+	input(\type(ATypeToHTMLInputType(qtype)), name(var.name), html5attr("disabled", "disabled"))
+  	);
+
+HTML5Node htmlCompile(conditional(\if(AExpr condition, list[AQuestion] questions)))
+	= div(
+		html5attr("data-ql-if", unescapedConditionFieldName(condition)),
+		htmlCompile(questions)
+	);
+HTML5Node htmlCompile(conditional(\ifelse(AExpr condition, list[AQuestion] if_questions, list[AQuestion] else_questions)))
+	= div(
+		div(
+			html5attr("data-ql-if", unescapedConditionFieldName(condition)),
+			htmlCompile(if_questions)
+		),
+		div(
+			html5attr("data-ql-else", unescapedConditionFieldName(condition)),
+			htmlCompile(else_questions)
+		)
+	);
+
+HTML5Node htmlCompile(AQuestion q) = span("TODO");
+
+str ATypeToHTMLInputType(boolean()) = "checkbox";
+str ATypeToHTMLInputType(integer()) = "number";
+str ATypeToHTMLInputType(string()) = "text";
 
 
 str form2js(AForm f) {
@@ -153,7 +184,11 @@ str questionFieldName(AId label)
 	= "\"question_<label.name>\"" ;
 	
 str conditionFieldName(AExpr condition)
-	= "\"condition_(<toJSExpr(condition)>)\"";
+	= "\"<unescapedConditionFieldName(condition)>";
+
+str unescapedConditionFieldName(AExpr condition)
+	= "condition_(<escape(toJSExpr(condition), ("\"": "\\\""))>)";
+
 
 str jsDefaultValue(boolean()) = "false";
 str jsDefaultValue(integer()) = "0";
