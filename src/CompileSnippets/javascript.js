@@ -118,8 +118,10 @@ function alterContentsOfComputedQuestions(prop, value) {
     let affected_fields = document.querySelectorAll("[name='" + prop + "']");
 
     affected_fields.forEach(function(field) {
-        field.value = value;
-        field.checked = value;
+        switch(field.type) {
+        case "checkbox": field.checked = value; break;
+        default: field.value = value; break;
+        }
     });
 }
 

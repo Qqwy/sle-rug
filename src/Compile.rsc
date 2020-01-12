@@ -51,6 +51,7 @@ HTML5Node htmlCompile(AForm f, loc filename) {
 			form(
 				name(f.name), 
 				action("#"), 
+				h1(f.name),
 				htmlCompile(f.questions)
 			),
 			script(src(jsloc))
@@ -259,10 +260,10 @@ void compileFromString(str inputForm, loc src) {
         //println(ast.src);
         UseDef useDef = resolve(ast).useDef;
         set[Message] msgs = check(ast, <collect(ast), useDef>);
-        if (msgs == {}) {
+        //if (msgs == {}) {
           return compile(ast);
-        }
-        throw msgs;
+        //}
+        //throw msgs;
       }
   throw {error("Not a form", t@\loc)};
 }
@@ -281,8 +282,28 @@ test bool simpleCompileTest() {
 }
 
 
-test bool compileExample() {
+test bool compileSimpleExample() {
 	compileFromString(readFile(|project://QL/examples/simple_example.myql|), |project://QL/examples/simple_example.myql|);
 	return true;
 }
 
+
+test bool compileTax() {
+	compileFromString(readFile(|project://QL/examples/tax.myql|), |project://QL/examples/tax.myql|);
+	return true;
+}
+
+test bool compileBinary() {
+	compileFromString(readFile(|project://QL/examples/binary.myql|), |project://QL/examples/binary.myql|);
+	return true;
+}
+
+test bool compileEmpty() {
+	compileFromString(readFile(|project://QL/examples/empty.myql|), |project://QL/examples/empty.myql|);
+	return true;
+}
+
+test bool compileCyclic() {
+	compileFromString(readFile(|project://QL/examples/cyclic.myql|), |project://QL/examples/cyclic.myql|);
+	return true;
+}
