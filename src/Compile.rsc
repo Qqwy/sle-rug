@@ -25,15 +25,17 @@ import Check; // For tests only.
  */
 
 void compile(AForm f) {
-try {
-  writeFile(f.src[extension="js"].top, form2js(f));
-  //html = toString(htmlCompile(f));
-  writeFile(f.src[extension="css"].top, form2css(f));
-  writeFile(f.src[extension="html"].top, "\<!DOCTYPE html\>" + lang::html5::DOM::toString(htmlCompile(f, f.src)));
-  
-  } catch err: {
-  	println(err);
-  };
+	str js = form2js(f);
+	println(js);
+  	writeFile(f.src[extension="js"].top, js);
+
+	str css = form2css(f);
+	println(css);
+  	writeFile(f.src[extension="css"].top, css);
+
+  	str html = "\<!DOCTYPE html\>" + lang::html5::DOM::toString(htmlCompile(f, f.src));
+  	println(html);
+  	writeFile(f.src[extension="html"].top, html);
 }
 
 HTML5Node htmlCompile(AForm f, loc filename) {
@@ -72,8 +74,42 @@ HTML5Node htmlCompile(AQuestion question)
 
 str form2js(AForm f) {
   return "var test = 42; 
-  		 'var window.ql_questions = <form2jsInitialValues(f)>;";
+  		 'var window.ql_questions = <form2jsInitialValues(f)>;
+  		 'function update(ql_questions) {
+  		 '<form2jsUpdate(f)>
+  		 '}
+  		 '";
 }
+
+str form2jsUpdate(AForm f) 
+	= form2jsUpdate(f.questions);
+
+str form2jsUpdate(list[AQuestion] questions)
+	= ("" | it + form2jsUpdate(question) | question <- questions);
+
+str form2jsUpdate(block(List[AQuestion]questions))
+	= form2jsUpdate(questions);
+
+
+// Simple questions do not need to be updated, they are updated only when someone enters something.
+str form2jsUpdate(\simple_question(_, AId label, _))
+	= "";
+	
+str form2jsUpdate(\computed_question(_, AId label, _, AExpr expr))
+	= "ql_questions[<questionFieldName(label)>] = <toJSExpr(expr)>;\n";
+
+str form2jsUpdate(\conditional(\if(AExpr condition, list[AQuestion] questions)))
+	= "if(<toJSExpr(condition)>) {
+	'	<form2jsUpdate(questions)>}
+	";
+
+str form2jsUpdate(\conditional(\ifelse(AExpr condition, list[AQuestion] if_questions, list[AQuestion] else_questions)))
+	= "if(<toJSExpr(condition)>) {
+	'	<form2jsUpdate(if_questions)>
+	'} else {
+	'	<form2jsUpdate(else_questions)>}
+	";
+
 
 str form2jsInitialValues(AForm f) {
 	question_values = form2jsInitialQuestions(f);
@@ -88,7 +124,7 @@ list[str] form2jsInitialQuestions(AForm f) {
 	+ (label: qtype | /computed_question(_, AId label, AType qtype, _) := f)
 	;
 	println(env);
-	inits = ["\"question_<val.name>\" : <jsDefaultValue(env[val])>" | val <- env];
+	inits = ["<questionFieldName(label)> : <jsDefaultValue(env[label])>" | label <- env];
 	return inits;
 }
 
@@ -100,34 +136,42 @@ list[str] form2jsInitialConditionals(AForm f) {
 	+ (condition: boolean() | /ifelse(AExpr condition, _, _) := f)
 	;
 
-	inits = ["\"condition(<val>)\" : <jsDefaultValue(env[val])>" | val <- env];
+	inits = ["<conditionFieldName(condition)> : <jsDefaultValue(env[condition])>" | condition <- env];
 	return inits;
 }
 
-//str jsQuestionBeginState(list[AQuestion] questions)
-//	= "{\n<intercalate(", \n", [ jsQuestionBeginState(question) | question <- questions])>\n}";
-
-
-  //= simple_question(str name, AId variable, AType qtype)
-  //| computed_question(str name, AId variable, AType qtype, AExpr definition)
-  //| block(list[AQuestion] questions)
-  //| conditional(AConditional c)
-str jsQuestionBeginState(simple_question(name, variable, qtype))
-	= "sq_<variable.name>: <jsDefaultValue(qtype)>";
-
-str jsQuestionBeginState(computed_question(name, variable, qtype, _))
-	= "cq_<variable.name>: <jsDefaultValue(qtype)>";
-
-str jsQuestionBeginState(computed_question(name, variable, qtype, _))
-	= "cq_<variable.name>: <jsDefaultValue(qtype)>";
-
-str jsQuestionBeginState(AQuestion question)
-	= "todo: \"todo\"";
-
+str questionFieldName(AId label)
+	= "\"question_<label.name>\"" ;
+	
+str conditionFieldName(AExpr condition)
+	= "\"condition_(<toJSExpr(condition)>)\"";
 
 str jsDefaultValue(boolean()) = "false";
 str jsDefaultValue(integer()) = "0";
 str jsDefaultValue(string()) = "\"\"";
+
+
+str toJSExpr(ref(AId id))					= "ql_questions[<questionFieldName(id)>]";
+str toJSExpr(\lit(ALit literal))			= toJSLit(literal);
+str toJSExpr(not(AExpr expr)) 				= "!<toJSExpr(expr)>";
+str toJSExpr(mult(AExpr lhs, AExpr rhs)) 	= "<toJSExpr(lhs)> * <toJSExpr(rhs)>";
+str toJSExpr(div(AExpr lhs, AExpr rhs)) 	= "<toJSExpr(lhs)> / <toJSExpr(rhs)>";
+str toJSExpr(plus(AExpr lhs, AExpr rhs)) 	= "<toJSExpr(lhs)> + <toJSExpr(rhs)>";
+str toJSExpr(minus(AExpr lhs, AExpr rhs)) 	= "<toJSExpr(lhs)> - <toJSExpr(rhs)>";
+str toJSExpr(and(AExpr lhs, AExpr rhs)) 	= "<toJSExpr(lhs)> && <toJSExpr(rhs)>";
+str toJSExpr(or(AExpr lhs, AExpr rhs)) 	= "<toJSExpr(lhs)> || <toJSExpr(rhs)>";
+str toJSExpr(gt(AExpr lhs, AExpr rhs)) 	= "<toJSExpr(lhs)> \> <toJSExpr(rhs)>";
+str toJSExpr(lt(AExpr lhs, AExpr rhs)) 	= "<toJSExpr(lhs)> \< <toJSExpr(rhs)>";
+str toJSExpr(gte(AExpr lhs, AExpr rhs)) 	= "<toJSExpr(lhs)> \>= <toJSExpr(rhs)>";
+str toJSExpr(lte(AExpr lhs, AExpr rhs)) 	= "<toJSExpr(lhs)> \<= <toJSExpr(rhs)>";
+str toJSExpr(equal(AExpr lhs, AExpr rhs)) 	= "<toJSExpr(lhs)> === <toJSExpr(rhs)>";
+str toJSExpr(not_equal(AExpr lhs, AExpr rhs)) 	= "<toJSExpr(lhs)> !== <toJSExpr(rhs)>";
+
+
+
+str toJSLit(lit_integer(int int_val)) = "<int_val>";
+str toJSLit(lit_boolean(bool bool_val)) = "<bool_val>";
+str toJSLit(lit_string(str str_val)) = "\"<str_val>\"";
 
 
 
