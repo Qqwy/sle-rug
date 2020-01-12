@@ -6,6 +6,11 @@ import IO;
 import lang::html5::DOM; // see standard library
 import List;
 
+import Syntax; // For tests only.
+import ParseTree; // For tests only.
+import CST2AST; // For tests only.
+import Check; // For tests only.
+
 /*
  * Implement a compiler for QL to HTML and Javascript
  *
@@ -73,14 +78,46 @@ HTML5Node htmlCompile(AQuestion question)
 
 str form2js(AForm f) {
   return "var test = 42; 
-  		 'var window.ql_questions = <jsQuestionBeginState(f.questions)>;";
+  		 'var window.ql_questions = <form2jsInitialQuestions(f)>;";
 }
 
-str jsQuestionBeginState(list[AQuestion] questions)
-	= "{\n<intercalate(", \n", [ jsQuestionBeginState(question) | question <- questions])>\n}";
+str form2jsInitialQuestions(AForm f) {
+	map[AId name, AType \type] env = 
+	  (label: qtype | /simple_question(_, AId label, AType qtype)      := f)
+	+ (label: qtype | /computed_question(_, AId label, AType qtype, _) := f)
+	;
+	println(env);
+	str inits = intercalate(",\n", ["<val.name>: <jsDefaultValue(env[val])>" | val <- env]);
+	println(inits);
+	return "{\n<inits>\n}";
+}
+
+//str jsQuestionBeginState(list[AQuestion] questions)
+//	= "{\n<intercalate(", \n", [ jsQuestionBeginState(question) | question <- questions])>\n}";
+
+
+  //= simple_question(str name, AId variable, AType qtype)
+  //| computed_question(str name, AId variable, AType qtype, AExpr definition)
+  //| block(list[AQuestion] questions)
+  //| conditional(AConditional c)
+str jsQuestionBeginState(simple_question(name, variable, qtype))
+	= "sq_<variable.name>: <jsDefaultValue(qtype)>";
+
+str jsQuestionBeginState(computed_question(name, variable, qtype, _))
+	= "cq_<variable.name>: <jsDefaultValue(qtype)>";
+
+str jsQuestionBeginState(computed_question(name, variable, qtype, _))
+	= "cq_<variable.name>: <jsDefaultValue(qtype)>";
 
 str jsQuestionBeginState(AQuestion question)
-	= "a: 1";
+	= "todo: \"todo\"";
+
+
+str jsDefaultValue(boolean()) = "false";
+str jsDefaultValue(integer()) = "0";
+str jsDefaultValue(string()) = "\"\"";
+
+
 
 str form2css(AForm f) {
 return "
@@ -100,4 +137,36 @@ return "
 
 str jsPreamble() {
 	return "";
+}
+
+// Compiles a QL form from an input string,
+// and writes the output to temporary files.
+void compileFromString(str inputForm) {
+	t = parse(#start[Form], inputForm);
+	if (start[Form] pt := t) {
+		
+        AForm ast = cst2ast(pt);
+        ast.src = |tmp:///test.myql|;
+        //println(ast.src);
+        UseDef useDef = resolve(ast).useDef;
+        set[Message] msgs = check(ast, <collect(ast), useDef>);
+        if (msgs == {}) {
+          return compile(ast);
+        }
+        throw msgs;
+      }
+  throw {error("Not a form", t@\loc)};
+}
+
+// This test succeeds as long as no exceptions occur during compilation.
+test bool simpleCompileTest() {
+	str form = "form a {
+		\"foo\" foo : integer
+		if(foo \> 20) {
+			\"bar\" bar : integer = foo + 33
+		}
+	}
+	";
+	compileFromString(form);
+	return true;
 }

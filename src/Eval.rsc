@@ -33,7 +33,7 @@ data Input
 VEnv initialEnv(AForm f) {
   return 
     ( label.name: atype2value(qtype) | q: /simple_question(_, AId label, AType qtype)      := f ) 
-  + ( label.name: atype2value(qtype) | q: /computed_question(_, AId label, AType qtype, _) := f ) ;
+  + ( label.name: atype2value(qtype) | q: /computed_question(_, AId label, AType qtype, _) := f )
   ;
 }
 
