@@ -158,7 +158,8 @@ str form2jsInitialValues(AForm f) {
 	str combined = intercalate(",\n", question_values + conditional_values);
 	return"{\n<combined>\n}";
 }
-
+// Transforms all simple and computed questions into string keys representing that question,
+// filling it with the default value.
 list[str] form2jsInitialQuestions(AForm f) {
 	map[AId name, AType \type] env = 
 	  (label: qtype | /simple_question(_, AId label, AType qtype)      := f)
@@ -169,8 +170,7 @@ list[str] form2jsInitialQuestions(AForm f) {
 	return inits;
 }
 
-// Transforms all conditionals into string keys representing that conditional.
-// Not beautiful (it would be nicer if we'd use a pretty printer), but it works.
+// Transforms all conditionals into string keys representing that conditional, filling it with the default value.
 list[str] form2jsInitialConditionals(AForm f) {
 	map[AExpr condition, AType \type] env = 
 	  (condition: boolean() | /\if(AExpr condition, _)      := f)
@@ -180,22 +180,26 @@ list[str] form2jsInitialConditionals(AForm f) {
 	inits = ["<conditionFieldName(condition)> : <jsDefaultValue(env[condition])>" | condition <- env];
 	return inits;
 }
-
+// We prepend all normal questions by `question_` and all conditionals by `condition_`
+// to make sure we'll never have name clashes.
 str questionFieldName(AId label)
 	= "\"<unescapedQuestionFieldName(label)>\"";
 	
 str unescapedQuestionFieldName(AId label)
 	= "question_<label.name>";
 	
-	
-	
+// We prepend all normal questions by `question_` and all conditionals by `condition_`
+// to make sure we'll never have name clashes.
 str conditionFieldName(AExpr condition)
 	= "\'<unescapedConditionFieldName(condition)>\'";
 
 str htmlEscapedConditionFieldName(AExpr condition)
 	= "condition_(<escape(toJSExpr(condition), ("\"": "&quot;"))>)";
 
-// Replaces " by \"
+// A semi-hackish way of creating unique identifiers for the various conditionals:
+// We turn the condition into its JS representation, and use a string version of this as identifier key in the runtime environment.
+//
+// Replaces `"` by `\"`, since the internals of the condition are used inside JS strings which are `"`-delimited.
 str unescapedConditionFieldName(AExpr condition)
 	= "condition_(<escape(toJSExpr(condition), ("\"": "\\\""))>)";
 
@@ -204,7 +208,7 @@ str jsDefaultValue(boolean()) = "false";
 str jsDefaultValue(integer()) = "0";
 str jsDefaultValue(string()) = "\"\"";
 
-
+// Turns a QL AST expression into its JS runtime environment equivalent.
 str toJSExpr(ref(AId id))					= "ql_questions[<questionFieldName(id)>]";
 str toJSExpr(\lit(ALit literal))			= toJSLit(literal);
 str toJSExpr(not(AExpr expr)) 				= "!<toJSExpr(expr)>";
@@ -222,10 +226,13 @@ str toJSExpr(equal(AExpr lhs, AExpr rhs)) 	= "<toJSExpr(lhs)> === <toJSExpr(rhs)
 str toJSExpr(not_equal(AExpr lhs, AExpr rhs)) 	= "<toJSExpr(lhs)> !== <toJSExpr(rhs)>";
 
 
-
+// Literal strings receive an extra `"` surrounding them, and are escaped.
+//
+// !!Do note that proper JS/HTML special chars escaping does _not_ happen.
+// It is _very_ possible to create usability and security problems by entering certain string literals.
 str toJSLit(lit_integer(int int_val)) = "<int_val>";
 str toJSLit(lit_boolean(bool bool_val)) = "<bool_val>";
-str toJSLit(lit_string(str str_val)) = "\"<str_val>\"";
+str toJSLit(lit_string(str str_val)) = "\"<escape(str_val, ("\"": "\\\""))>\"";
 
 
 // The following CSS is mobile-friendly, since it is viewport-size responsive.
@@ -257,12 +264,11 @@ return "
 	}";
 }
 
-str jsPreamble() {
-	return "";
-}
 
 // Compiles a QL form from an input string,
 // and writes the output to temporary files.
+// Allows you to pass in a source location manually, 
+// which allows us to use small strings as well as files.
 void compileFromString(str inputForm, loc src) {
 	t = parse(#start[Form], inputForm);
 	if (start[Form] pt := t) {
@@ -293,8 +299,9 @@ test bool simpleCompileTest() {
 	return true;
 }
 
-// Immediately compile the examples, to make sure we can indeed compile them without compile-time errors.
-
+/*
+ * Immediately compile the examples, to make sure we can indeed compile them without compile-time errors.
+ */
 
 test bool compileSimpleExample() {
 	compileFromString(readFile(|project://QL/examples/simple_example.myql|), |project://QL/examples/simple_example.myql|);

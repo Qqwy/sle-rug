@@ -14,6 +14,9 @@ function setup() {
         console.log(field);
         field.addEventListener("change", triggerFormChange);
     }
+    // Properly initialize all conditionals:
+    update(window.ql_questions);
+    // Show/hide blocks of fields:
     render(window.ql_questions);
 }
 
