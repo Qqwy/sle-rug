@@ -39,11 +39,6 @@ try {
 HTML5Node htmlCompile(AForm f, loc filename) {
 	str cssloc = filename[extension="css"].file;
 	str jsloc = filename[extension="js"].file;
-	println("beforebefore");
-	println(f.questions);
-	println("before");
-	println(lang::html5::DOM::toString(htmlCompile(f.questions)));
-	println("after");
 	HTML5Node res = 
 	html(
 		head(
@@ -58,8 +53,7 @@ HTML5Node htmlCompile(AForm f, loc filename) {
 			script(src(jsloc))
 		)
 	);
-	println(res);
-	println("afterafter");
+	//println(res);
 	return res;
 }
 
@@ -78,18 +72,36 @@ HTML5Node htmlCompile(AQuestion question)
 
 str form2js(AForm f) {
   return "var test = 42; 
-  		 'var window.ql_questions = <form2jsInitialQuestions(f)>;";
+  		 'var window.ql_questions = <form2jsInitialValues(f)>;";
 }
 
-str form2jsInitialQuestions(AForm f) {
+str form2jsInitialValues(AForm f) {
+	question_values = form2jsInitialQuestions(f);
+	conditional_values = form2jsInitialConditionals(f);
+	str combined = intercalate(",\n", question_values + conditional_values);
+	return"{\n<combined>\n}";
+}
+
+list[str] form2jsInitialQuestions(AForm f) {
 	map[AId name, AType \type] env = 
 	  (label: qtype | /simple_question(_, AId label, AType qtype)      := f)
 	+ (label: qtype | /computed_question(_, AId label, AType qtype, _) := f)
 	;
 	println(env);
-	str inits = intercalate(",\n", ["<val.name>: <jsDefaultValue(env[val])>" | val <- env]);
-	println(inits);
-	return "{\n<inits>\n}";
+	inits = ["\"question_<val.name>\" : <jsDefaultValue(env[val])>" | val <- env];
+	return inits;
+}
+
+// Transforms all conditionals into string keys representing that conditional.
+// Not beautiful (it would be nicer if we'd use a pretty printer), but it works.
+list[str] form2jsInitialConditionals(AForm f) {
+	map[AExpr condition, AType \type] env = 
+	  (condition: boolean() | /\if(AExpr condition, _)      := f)
+	+ (condition: boolean() | /ifelse(AExpr condition, _, _) := f)
+	;
+
+	inits = ["\"condition(<val>)\" : <jsDefaultValue(env[val])>" | val <- env];
+	return inits;
 }
 
 //str jsQuestionBeginState(list[AQuestion] questions)
