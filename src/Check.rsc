@@ -130,9 +130,8 @@ set[Message] check(AExpr e, CheckEnv checkEnv) {
     case lt(AExpr lhs, AExpr rhs): 			return checkBinaryOp(lhs, rhs, tint(),  checkEnv);
     case gte(AExpr lhs, AExpr rhs): 		return checkBinaryOp(lhs, rhs, tint(),  checkEnv);
     case lte(AExpr lhs, AExpr rhs): 		return checkBinaryOp(lhs, rhs, tint(),  checkEnv);
-    // TODO: Implement for string and boolean as well?
-    case equal(AExpr lhs, AExpr rhs): 		return checkBinaryOp(lhs, rhs, tint(),  checkEnv);
-    case not_equal(AExpr lhs, AExpr rhs): 	return checkBinaryOp(lhs, rhs, tint(),  checkENv);
+    case equal(AExpr lhs, AExpr rhs): 		return checkBinaryOpSameArbitraryType(lhs, rhs, checkEnv);
+    case not_equal(AExpr lhs, AExpr rhs): 	return checkBinaryOpSameArbitraryType(lhs, rhs, checkEnv);
     
     default: 								assert false : "Unhandled expression <e> in semantic checking algorithm.";
   }
@@ -154,6 +153,24 @@ set[Message] requireBinOpTypes(AExpr lhs, AExpr rhs, Type required_type, CheckEn
 	= requireArgumentType(lhs, required_type, checkEnv)
 	+ requireArgumentType(rhs, required_type, checkEnv);
 
+set[Message] checkBinaryOpSameArbitraryType(AExpr lhs, AExpr rhs, CheckEnv checkEnv)
+{
+	lhs_type = typeOf(lhs, checkEnv);
+	rhs_type = typeOf(rhs, checkEnv);
+	println("--");
+	println(lhs_type);
+	println(rhs_type);
+	println("--");
+	other_messages = check(lhs, checkEnv) + check(rhs, checkEnv);
+	if (lhs_type != rhs_type) {
+		return {
+		error("Incompatible argument types (expected both arguments to be the same, got `<print_type(lhs_type)>` and `<print_type(rhs_type)>`)", lhs.src), 
+		error("Incompatible argument types (expected both arguments to be the same, got `<print_type(lhs_type)>` and `<print_type(rhs_type)>`)", rhs.src)} 
+		+ other_messages;
+	} else {
+		return other_messages;
+	}
+}
 
 set[Message] requireArgumentType(AExpr expr, Type required_type, CheckEnv checkEnv)
 	= {error("Incompatible argument type (expected `<print_type(required_type)>` but got `<print_type(real_type)>`)", expr.src) | real_type :=  typeOf(expr, checkEnv), real_type != required_type};
