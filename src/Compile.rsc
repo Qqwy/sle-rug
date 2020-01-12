@@ -228,15 +228,27 @@ str toJSLit(lit_boolean(bool bool_val)) = "<bool_val>";
 str toJSLit(lit_string(str str_val)) = "\"<str_val>\"";
 
 
-
+// The following CSS is mobile-friendly, since it is viewport-size responsive.
 str form2css(AForm f) {
 return "
+	form {
+		margin: auto;
+		max-width: 60em;
+		padding: 0em 1em;
+		font-size: 1.1em;
+	}
+	
 	input {
-	    margin: 1em;
+		display: inline-block;
+	    max-width: 30em;
+	    width: 45%;
 	}
 	
 	label {
+		display: inline-block;
 	    margin-top: 1.5em;
+	    max-width: 30em;
+	    width: 45%;
 	}
 	
 	
@@ -281,6 +293,8 @@ test bool simpleCompileTest() {
 	return true;
 }
 
+// Immediately compile the examples, to make sure we can indeed compile them without compile-time errors.
+
 
 test bool compileSimpleExample() {
 	compileFromString(readFile(|project://QL/examples/simple_example.myql|), |project://QL/examples/simple_example.myql|);
@@ -303,7 +317,3 @@ test bool compileEmpty() {
 	return true;
 }
 
-test bool compileCyclic() {
-	compileFromString(readFile(|project://QL/examples/cyclic.myql|), |project://QL/examples/cyclic.myql|);
-	return true;
-}
