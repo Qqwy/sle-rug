@@ -45,6 +45,7 @@ HTML5Node htmlCompile(AForm f, loc filename) {
 	HTML5Node res = 
 	html(
 		head(
+			meta(charset("utf-8")),
 			link(\rel("stylesheet"), href(cssloc))
 		), 
 		body(
@@ -105,21 +106,26 @@ str ATypeToHTMLInputType(string()) = "text";
 
 
 str form2js(AForm f) {
-  return "<readFile(|project://QL/src/CompileSnippets/javascript.js|)>
-  		 '
-  		 'function initQuestions() {
-  		 '	window.ql_questions = <form2jsInitialValues(f)>;
-  		 '}
-  		 '
-  		 'function update(ql_questions) {
-  		 '	<form2jsUpdate(f)>
-  		 '	return ql_questions;
-  		 '}
-  		 '";
+	str template = readFile(|project://QL/src/CompileSnippets/javascript.js|);
+	template = replaceFirst(template, "\"{{initQuestions}}\"", form2jsInitQuestions(f));
+	template = replaceFirst(template, "\"{{update}}\"", form2jsUpdate(f));
+	return template;
 }
 
+str form2jsInitQuestions(AForm f)
+  = "
+	'function initQuestions() {
+	'	ql_questions = <form2jsInitialValues(f)>;
+	'}
+	'";
+
 str form2jsUpdate(AForm f) 
-	= form2jsUpdate(f.questions);
+  = "
+	'function update(ql_questions) {
+	'	<form2jsUpdate(f.questions)>
+	'	return ql_questions;
+	'}
+	";
 
 str form2jsUpdate(list[AQuestion] questions)
 	= ("" | it + form2jsUpdate(question) | question <- questions);
