@@ -73,10 +73,15 @@ HTML5Node htmlCompile(AQuestion question)
 
 
 str form2js(AForm f) {
-  return "var test = 42; 
-  		 'var window.ql_questions = <form2jsInitialValues(f)>;
+  return "<readFile(|project://QL/src/CompileSnippets/javascript.js|)>
+  		 '
+  		 'function initQuestions() {
+  		 '	var window.ql_questions = <form2jsInitialValues(f)>;
+  		 '}
+  		 '
   		 'function update(ql_questions) {
-  		 '<form2jsUpdate(f)>
+  		 '	<form2jsUpdate(f)>
+  		 '	return ql_questions;
   		 '}
   		 '";
 }
@@ -99,12 +104,16 @@ str form2jsUpdate(\computed_question(_, AId label, _, AExpr expr))
 	= "ql_questions[<questionFieldName(label)>] = <toJSExpr(expr)>;\n";
 
 str form2jsUpdate(\conditional(\if(AExpr condition, list[AQuestion] questions)))
-	= "if(<toJSExpr(condition)>) {
+	= "
+	'ql_questions[<conditionFieldName(condition)>] = <toJSExpr(condition)>;
+	'if(ql_questions[<conditionFieldName(condition)>]) {
 	'	<form2jsUpdate(questions)>}
 	";
 
 str form2jsUpdate(\conditional(\ifelse(AExpr condition, list[AQuestion] if_questions, list[AQuestion] else_questions)))
-	= "if(<toJSExpr(condition)>) {
+	= "
+	'ql_questions[<conditionFieldName(condition)>] = <toJSExpr(condition)>;
+	'if(ql_questions[<conditionFieldName(condition)>]) {
 	'	<form2jsUpdate(if_questions)>
 	'} else {
 	'	<form2jsUpdate(else_questions)>}
@@ -197,12 +206,12 @@ str jsPreamble() {
 
 // Compiles a QL form from an input string,
 // and writes the output to temporary files.
-void compileFromString(str inputForm) {
+void compileFromString(str inputForm, loc src) {
 	t = parse(#start[Form], inputForm);
 	if (start[Form] pt := t) {
 		
         AForm ast = cst2ast(pt);
-        ast.src = |tmp:///test.myql|;
+        ast.src = src;
         //println(ast.src);
         UseDef useDef = resolve(ast).useDef;
         set[Message] msgs = check(ast, <collect(ast), useDef>);
@@ -223,6 +232,13 @@ test bool simpleCompileTest() {
 		}
 	}
 	";
-	compileFromString(form);
+	compileFromString(form, |tmp:///test.myql|);
 	return true;
 }
+
+
+test bool compileExample() {
+	compileFromString(readFile(|project://QL/examples/simple_example.myql|), |project://QL/examples/simple_example.myql|);
+	return true;
+}
+

@@ -4,6 +4,9 @@ form taxOfficeExample {
   
   if(bought && bought2) {
     "did you really really buy?" bought3 : boolean
+    "some fun?" bought4 : boolean = bought && bought3
   }
 }
+
+
 
