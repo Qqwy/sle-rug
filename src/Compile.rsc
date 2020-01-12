@@ -68,30 +68,30 @@ HTML5Node htmlCompile(list[AQuestion] questions)
 HTML5Node htmlCompile(simple_question(str qname, AId var, AType qtype))
   = div(
   	html5attr("data-ql-question", var.name),
-  	label(\for(var.name), qname),
-	input(\type(ATypeToHTMLInputType(qtype)), name(var.name))
+  	label(\for(unescapedQuestionFieldName(var)), qname),
+	input(\type(ATypeToHTMLInputType(qtype)), name(unescapedQuestionFieldName(var)))
   	);
 
 HTML5Node htmlCompile(computed_question(str qname, AId var, AType qtype, _))
   = div(
   	html5attr("data-ql-question", var.name),
-  	label(\for(var.name), qname),
-	input(\type(ATypeToHTMLInputType(qtype)), name(var.name), html5attr("disabled", "disabled"))
+  	label(\for(unescapedQuestionFieldName(var)), qname),
+	input(\type(ATypeToHTMLInputType(qtype)), name(unescapedQuestionFieldName(var)), disabled("disabled"))
   	);
 
 HTML5Node htmlCompile(conditional(\if(AExpr condition, list[AQuestion] questions)))
 	= div(
-		html5attr("data-ql-if", unescapedConditionFieldName(condition)),
+		html5attr("data-ql-if", htmlEscapedConditionFieldName(condition)),
 		htmlCompile(questions)
 	);
 HTML5Node htmlCompile(conditional(\ifelse(AExpr condition, list[AQuestion] if_questions, list[AQuestion] else_questions)))
 	= div(
 		div(
-			html5attr("data-ql-if", unescapedConditionFieldName(condition)),
+			html5attr("data-ql-if", htmlEscapedConditionFieldName(condition)),
 			htmlCompile(if_questions)
 		),
 		div(
-			html5attr("data-ql-else", unescapedConditionFieldName(condition)),
+			html5attr("data-ql-else", htmlEscapedConditionFieldName(condition)),
 			htmlCompile(else_questions)
 		)
 	);
@@ -107,7 +107,7 @@ str form2js(AForm f) {
   return "<readFile(|project://QL/src/CompileSnippets/javascript.js|)>
   		 '
   		 'function initQuestions() {
-  		 '	var window.ql_questions = <form2jsInitialValues(f)>;
+  		 '	window.ql_questions = <form2jsInitialValues(f)>;
   		 '}
   		 '
   		 'function update(ql_questions) {
@@ -181,11 +181,20 @@ list[str] form2jsInitialConditionals(AForm f) {
 }
 
 str questionFieldName(AId label)
-	= "\"question_<label.name>\"" ;
+	= "\"<unescapedQuestionFieldName(label)>\"";
+	
+str unescapedQuestionFieldName(AId label)
+	= "question_<label.name>";
+	
+	
 	
 str conditionFieldName(AExpr condition)
-	= "\"<unescapedConditionFieldName(condition)>";
+	= "\'<unescapedConditionFieldName(condition)>\'";
 
+str htmlEscapedConditionFieldName(AExpr condition)
+	= "condition_(<escape(toJSExpr(condition), ("\"": "&quot;"))>)";
+
+// Replaces " by \"
 str unescapedConditionFieldName(AExpr condition)
 	= "condition_(<escape(toJSExpr(condition), ("\"": "\\\""))>)";
 

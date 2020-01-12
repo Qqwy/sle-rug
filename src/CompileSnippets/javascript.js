@@ -91,9 +91,9 @@ function render(ql_questions) {
 }
 
 function alterVisibilityofConditionalBlocks(prop, value){
-    let affected_fields = document.querySelectorAll("[data-ql-question-visible-when=" + prop + "]");
+    let affected_fields = document.querySelectorAll("[data-ql-if='" + prop + "']");
     affected_fields.forEach(function(field) {
-        console.log(field);
+        console.log("The value of", prop, "is", field);
 
         if(value) {
             field.className = "visible";
@@ -101,29 +101,28 @@ function alterVisibilityofConditionalBlocks(prop, value){
             field.className = "hidden";
         }
     });
+    let affected_fields2 = document.querySelectorAll("[data-ql-else='" + prop + "']");
+    affected_fields2.forEach(function(field) {
+        console.log("The value of else", prop, "is", field);
+
+        if(value) {
+            field.className = "hidden";
+        }else {
+            field.className = "visible";
+        }
+    });
+
 }
 
 function alterContentsOfComputedQuestions(prop, value) {
-    let affected_fields = document.querySelectorAll("[name=" + prop + "]");
+    let affected_fields = document.querySelectorAll("[name='" + prop + "']");
 
     affected_fields.forEach(function(field) {
         field.value = value;
+        field.checked = value;
     });
 }
 
-function initQuestions() {
-    window.ql_questions = {foo: 0, bar: false, foo_c: 0};
-}
-
-// Updates all computed questions (and if-statements).
-function update(ql_questions) {
-    // To be filled by the compiler
-    // if(ql_questions["bar"]) {
-
-    // }
-
-    ql_questions["foo_c"] = ql_questions["foo"];
-    ql_questions["bar_c"] = !ql_questions["bar"];
-
-    return ql_questions;
-}
+// TO be filled in by the compilation code:
+// initQuestions(), which sets up the `ql_questions` variable
+// update(ql_questions), which recalculates all computed questions and conditionals based on the current values.
