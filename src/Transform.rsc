@@ -29,7 +29,32 @@ import AST;
  */
  
 AForm flatten(AForm f) {
-  return f; 
+  return form(f.name + "_Flattened", flattenQuestions(f.questions, lit(lit_boolean(true))));
+}
+
+list[AQuestion] flattenQuestions(list[AQuestion] questions, AExpr conj) {
+	return [*flattenQuestion(q, conj) | q <- questions];
+}
+
+list[AQuestion] flattenQuestion(conditional(AConditional c), AExpr conj) {
+	return flattenConditional(c, conj);
+}
+
+list[AQuestion] flattenQuestion(block(list[AQuestion] questions), AExpr conj) {
+	return [block(flattenQuestions(questions, conj))];
+}
+
+list[AQuestion] flattenQuestion(AQuestion question, AExpr conj) {
+	return [conditional(\if(conj, [question]))];
+}
+
+list[AQuestion] flattenConditional(\if(AExpr condition, list[AQuestion] questions), AExpr conj) {
+	return flattenQuestions(questions, and(conj, condition));
+}
+
+list[AQuestion] flattenConditional(ifelse(AExpr condition, list[AQuestion] ifQuestions, list[AQuestion] elseQuestions), AExpr conj) {
+	return flattenQuestions(ifQuestions, and(conj, condition)) + 
+		   flattenQuestions(elseQuestions, and(conj, not(condition)));
 }
 
 /* Rename refactoring:
