@@ -6,6 +6,7 @@ import AST;
 import ParseTree;
 import CST2AST;
 import IO;
+import Set;
 
 /* 
  * Transforming QL forms
@@ -70,18 +71,17 @@ list[AQuestion] flattenConditional(ifelse(AExpr condition, list[AQuestion] ifQue
  
  
  start[Form] rename(start[Form] f, loc useOrDef, str newName, RefGraph refGraph) {
+   Id newId = [Id]newName;
    return visit(f) {
-    case (Declaration)`<Id name> : <Type qtype>` => (Declaration)`<Id newName> : <Type qtype>`
+    case (Declaration)`<Id name> : <Type qtype>` => (Declaration)`<Id newId> : <Type qtype>`
     when 
-    <nameId, useOrDef> <- refGraph.defs,
-    name == nameId
+    <"<name>", useOrDef> <- refGraph.defs
 
-   	case (Expr)`<Id name>` => (Expr)`<Id newName>` 
+   	case (Expr)`<Id name>` => (Expr)`<Id newId>` 
    	when
 
-       <nameId, loc def> <- refGraph.defs,
-       <useOrDef, def> <- refs.useDef,
-   	   name == nameId
+       <"<name>", loc def> <- refGraph.defs,
+       <useOrDef, def> <- refGraph.useDef
    }; 
  } 
 
@@ -90,13 +90,22 @@ start[Form] testRenaming(str input, loc useOrDef, str newName) {
 	ast = cst2ast(cst);
 	refGraph = resolve(ast);
 	println(refGraph);
+	set[loc] defs = refGraph.defs["bought"];
+	<myloc, _> = takeFirstFrom(defs);
+	println(myloc);
 	
-	return rename(cst, useOrDef, newName, refGraph);
+	return rename(cst, myloc, newName, refGraph);
 }
-
+/*
 test bool renamingWorks() {
 	str input = "form foo { \"x\" x : integer = 33}";
-	res = testRenaming(input, |unknown:///|(15,1,<1,15>,<1,16>), "y");
+	res = testRenaming(input, |unknown:///|(15,1,<1,15>,<1,16>), "boom");
+	println(res);
+	return true;
+}*/
+
+test bool simpleExampleRenaming() {
+	res = testRenaming(readFile(|project://QL/examples/simple_example.myql|), |unknown:///|(280,6,<8,36>,<8,42>), "superman");
 	println(res);
 	return true;
 }
