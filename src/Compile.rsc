@@ -11,6 +11,7 @@ import Syntax; 		// For tests only.
 import ParseTree; 	// For tests only.
 import CST2AST; 	// For tests only.
 import Check; 		// For tests only.
+import Transform;   // To test if the Transform module works correctly
 
 /*
  * Implement a compiler for QL to HTML and Javascript
@@ -27,15 +28,15 @@ import Check; 		// For tests only.
 
 void compile(AForm f) {
 	str js = form2js(f);
-	println(js);
+	//println(js);
   	writeFile(f.src[extension="js"].top, js);
 
 	str css = form2css(f);
-	println(css);
+	//println(css);
   	writeFile(f.src[extension="css"].top, css);
 
   	str html = "\<!DOCTYPE html\>" + lang::html5::DOM::toString(htmlCompile(f, f.src));
-  	println(html);
+  	//println(html);
   	writeFile(f.src[extension="html"].top, html);
 }
 
@@ -167,7 +168,7 @@ list[str] form2jsInitialQuestions(AForm f) {
 	  (label: qtype | /simple_question(_, AId label, AType qtype)      := f)
 	+ (label: qtype | /computed_question(_, AId label, AType qtype, _) := f)
 	;
-	println(env);
+	//println(env);
 	inits = ["<questionFieldName(label)> : <jsDefaultValue(env[label])>" | label <- env];
 	return inits;
 }
@@ -276,7 +277,9 @@ void compileFromString(str inputForm, loc src) {
 	if (start[Form] pt := t) {
 		
         AForm ast = cst2ast(pt);
+        ast = flatten(ast);
         ast.src = src;
+        println(ast);
         //println(ast.src);
         UseDef useDef = resolve(ast).useDef;
         set[Message] msgs = check(ast, <collect(ast), useDef>);

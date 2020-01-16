@@ -157,10 +157,6 @@ set[Message] checkBinaryOpSameArbitraryType(AExpr lhs, AExpr rhs, CheckEnv check
 {
 	lhs_type = typeOf(lhs, checkEnv);
 	rhs_type = typeOf(rhs, checkEnv);
-	println("--");
-	println(lhs_type);
-	println(rhs_type);
-	println("--");
 	other_messages = check(lhs, checkEnv) + check(rhs, checkEnv);
 	if (lhs_type != rhs_type) {
 		return {
