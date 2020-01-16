@@ -124,8 +124,12 @@ str form2jsUpdate(AForm f)
 	'}
 	";
 
-str form2jsUpdate(list[AQuestion] questions)
-	= ("" | it + form2jsUpdate(question) | question <- questions);
+str form2jsUpdate(list[AQuestion] questions){
+	println(questions);
+	 res = ("" | it + form2jsUpdate(question) | question <- questions);
+	 println(res);
+	 return res;
+	}
 
 str form2jsUpdate(block(List[AQuestion]questions))
 	= form2jsUpdate(questions);
@@ -292,7 +296,7 @@ void compileFromString(str inputForm, loc src) {
 }
 
 // This test succeeds as long as no exceptions occur during compilation.
-test bool simpleCompileTest() {
+/*test bool simpleCompileTest() {
 	str form = "form a {
 		\"foo\" foo : integer
 		if(foo \> 20) {
@@ -303,7 +307,7 @@ test bool simpleCompileTest() {
 	compileFromString(form, |tmp:///test.myql|);
 	return true;
 }
-
+*/
 /*
  * Immediately compile the examples, to make sure we can indeed compile them without compile-time errors.
  */
@@ -313,7 +317,7 @@ test bool compileSimpleExample() {
 	return true;
 }
 
-
+/*
 test bool compileTax() {
 	compileFromString(readFile(|project://QL/examples/tax.myql|), |project://QL/examples/tax.myql|);
 	return true;
@@ -328,4 +332,4 @@ test bool compileEmpty() {
 	compileFromString(readFile(|project://QL/examples/empty.myql|), |project://QL/examples/empty.myql|);
 	return true;
 }
-
+*/

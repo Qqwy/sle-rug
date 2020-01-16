@@ -3,6 +3,9 @@ module Transform
 import Syntax;
 import Resolve;
 import AST;
+import ParseTree;
+import CST2AST;
+import IO;
 
 /* 
  * Transforming QL forms
@@ -64,10 +67,36 @@ list[AQuestion] flattenConditional(ifelse(AExpr condition, list[AQuestion] ifQue
  *
  */
  
- start[Form] rename(start[Form] f, loc useOrDef, str newName, UseDef useDef) {
-   return f; 
- } 
  
  
- 
+ start[Form] rename(start[Form] f, loc useOrDef, str newName, RefGraph refGraph) {
+   return visit(f) {
+    case (Declaration)`<Id name> : <Type qtype>` => (Declaration)`<Id newName> : <Type qtype>`
+    when 
+    <nameId, useOrDef> <- refGraph.defs,
+    name == nameId
 
+   	case (Expr)`<Id name>` => (Expr)`<Id newName>` 
+   	when
+
+       <nameId, loc def> <- refGraph.defs,
+       <useOrDef, def> <- refs.useDef,
+   	   name == nameId
+   }; 
+ } 
+
+start[Form] testRenaming(str input, loc useOrDef, str newName) {
+	cst = parse(#start[Form], input);
+	ast = cst2ast(cst);
+	refGraph = resolve(ast);
+	println(refGraph);
+	
+	return rename(cst, useOrDef, newName, refGraph);
+}
+
+test bool renamingWorks() {
+	str input = "form foo { \"x\" x : integer = 33}";
+	res = testRenaming(input, |unknown:///|(15,1,<1,15>,<1,16>), "y");
+	println(res);
+	return true;
+}

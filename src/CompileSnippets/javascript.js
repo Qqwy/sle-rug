@@ -1,7 +1,7 @@
 // You will notice that the whole file is wrapped in an anonymous function.
 // This ensures that we do not leak any information nor variables to the outer scope.
 (function(){
-    var ql_questions = {};
+    window.ql_questions = {};
     main();
     // TODO rather than defining on window, hide ql_questions scope by wrapping in anonymous function?
     function main() {
