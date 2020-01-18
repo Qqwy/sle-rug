@@ -7,6 +7,7 @@ import ParseTree;
 import CST2AST; // cst2ast
 import Resolve; // resolve
 import Check;   // collect, check
+import Compile; // compile
 
 /* Parses a string to the CST and then immediately to the AST. */
 &AST <: node parse2ast(type[&T<:Tree] begin, str input)
@@ -37,4 +38,23 @@ set[Message] parseResolveCollectCheck(str input) {
 	TEnv collected = collect(ast);
 	// println(collected);
 	return check(ast, <collect(ast), resolve(ast).useDef>);
+}
+
+/* Compiles a QL form from an input string,
+ * and writes the output to temporary files.
+ * Allows you to pass in a source location manually, 
+ * which allows us to use small strings as well as files.
+ * Do note that we _always_ compile, even when `check` would return warnings or errors.
+ */
+void compileFromString(str inputForm, loc src) {
+	t = parse(#start[Form], inputForm);
+	if (start[Form] pt := t) {
+		
+        AForm ast = cst2ast(pt);
+        ast.src = src;
+        UseDef useDef = resolve(ast).useDef;
+        set[Message] msgs = check(ast, <collect(ast), useDef>);
+        return compile(ast);
+      }
+  throw {error("Not a form", t@\loc)};
 }
