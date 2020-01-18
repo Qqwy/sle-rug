@@ -45,7 +45,7 @@ Type atype2type(AType atype) {
   - Prevents operators receiving the wrong type of arguments.
   - Prevents references that refer to questions that do not exist.
   
-  TODO maybe check for cycles?
+  Does _not_ check for cycles
 */
 set[Message] check(AForm f, CheckEnv checkEnv)
 	= check(f.questions, checkEnv);
@@ -137,16 +137,19 @@ set[Message] requireQuestionDefined(str name, loc u, CheckEnv checkEnv)
 
 set[Message] checkUnaryOp(AExpr inner, Type required_type, CheckEnv checkEnv)
 	= requireArgumentType(inner, required_type, checkEnv)
-	+ check(inner, checkEnv);
+	+ check(inner, checkEnv)
+	;
 
 set[Message] checkBinaryOp(AExpr lhs, AExpr rhs, Type required_type, CheckEnv checkEnv)
 	= requireBinOpTypes(lhs, rhs, required_type, checkEnv)
 	+ check(lhs, checkEnv)
-	+ check(rhs, checkEnv);
+	+ check(rhs, checkEnv)
+	;
 
 set[Message] requireBinOpTypes(AExpr lhs, AExpr rhs, Type required_type, CheckEnv checkEnv) 
 	= requireArgumentType(lhs, required_type, checkEnv)
-	+ requireArgumentType(rhs, required_type, checkEnv);
+	+ requireArgumentType(rhs, required_type, checkEnv)
+	;
 
 set[Message] checkBinaryOpSameArbitraryType(AExpr lhs, AExpr rhs, CheckEnv checkEnv)
 {
@@ -155,8 +158,9 @@ set[Message] checkBinaryOpSameArbitraryType(AExpr lhs, AExpr rhs, CheckEnv check
 	other_messages = check(lhs, checkEnv) + check(rhs, checkEnv);
 	if (lhs_type != rhs_type) {
 		return {
-		error("Incompatible argument types (expected both arguments to be the same, got `<print_type(lhs_type)>` and `<print_type(rhs_type)>`)", lhs.src), 
-		error("Incompatible argument types (expected both arguments to be the same, got `<print_type(lhs_type)>` and `<print_type(rhs_type)>`)", rhs.src)} 
+			error("Incompatible argument types (expected both arguments to be the same, got `<print_type(lhs_type)>` and `<print_type(rhs_type)>`)", lhs.src), 
+			error("Incompatible argument types (expected both arguments to be the same, got `<print_type(lhs_type)>` and `<print_type(rhs_type)>`)", rhs.src)
+		}
 		+ other_messages;
 	} else {
 		return other_messages;
@@ -204,15 +208,3 @@ str print_type(tint()) = "integer";
 str print_type(tbool()) = "boolean";
 str print_type(tstr()) = "string";
 str print_type(tunknown()) = "unknown";
-
-/* 
- * Pattern-based dispatch style:
- * 
- * Type typeOf(ref(str x, src = loc u), TEnv tenv, UseDef useDef) = t
- *   when <u, loc d> <- useDef, <d, x, _, Type t> <- tenv
- *
- * ... etc.
- * 
- * default Type typeOf(AExpr _, TEnv _, UseDef _) = tunknown();
- *
- */

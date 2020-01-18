@@ -100,15 +100,8 @@ str unescapedQuestionFieldName(AId label)
 str conditionFieldName(AExpr condition)
 	= "\'<unescapedConditionFieldName(condition)>\'";
 
-str htmlEscapedConditionFieldName(AExpr condition)
-	= "condition_(<escape(toJSExpr(condition), ("\"": "&quot;"))>)";
-
-// A semi-hackish way of creating unique identifiers for the various conditionals:
-// We turn the condition into its JS representation, and use a string version of this as identifier key in the runtime environment.
-//
-// Replaces `"` by `\"`, since the internals of the condition are used inside JS strings which are `"`-delimited.
 str unescapedConditionFieldName(AExpr condition)
-	= "condition_(<escape(toJSExpr(condition), ("\"": "\\\""))>)";
+	= "condition_<condition.src.offset>";
 
 str jsDefaultValue(boolean()) = "false";
 str jsDefaultValue(integer()) = "0";

@@ -30,4 +30,6 @@ Use uses(AForm f)
   = { <x.src, x.name> | /ref(AId x) := f }; 
 
 Def defs(AForm f)
-  = { <s.name, s.src> | /simple_question(_, AId s, _) := f } + { <s.name, s.src> | /computed_question(_, AId s, _, _) := f };
+  = { <s.name, s.src> | /simple_question(_, AId s, _) := f } 
+  + { <s.name, s.src> | /computed_question(_, AId s, _, _) := f }
+  ;

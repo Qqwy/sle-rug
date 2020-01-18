@@ -51,7 +51,7 @@ HTML5Node htmlCompile(computed_question(str qname, AId var, AType qtype, _))
 
 list[HTML5Node] htmlCompile(conditional(\if(AExpr condition, list[AQuestion] questions)))
 	= [div([
-		html5attr("data-ql-if", htmlEscapedConditionFieldName(condition)),
+		html5attr("data-ql-if", UnescapedConditionFieldName(condition)),
 		*htmlCompile(questions)]
 	)];
 
