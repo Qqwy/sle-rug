@@ -1,20 +1,8 @@
-module CST2AST::Test
+module Test::CST2AST
+
+import Test::Helper;
 
 import Syntax;
-import AST;
-import CST2AST; // Module under test
-
-import ParseTree;
-import String;
-import ValueIO; // for parsing simple integers, strings and booleans.
-extend lang::std::Id;
-
- 
-// Tests: 
-
-&AST <: node parse2ast(type[&T<:Tree] begin, str input)
-	= cst2ast(parse(begin, input));
-	
 
 test bool parsesVariable()
 	= ref(AExpr::id("something")) := parse2ast(#Expr, "something");

@@ -26,7 +26,6 @@ void main() {
     annotator(Tree(Tree t) {
       if (start[Form] pt := t) {
         AForm ast = cst2ast(pt);
-        println(ast); // Temporarily print the AST as soon as it is parsed, so we crash fast and show crash when cst2ast goes wrong.
         UseDef useDef = resolve(ast).useDef;
         set[Message] msgs = check(ast, <collect(ast), useDef>);
         return t[@messages=msgs][@hyperlinks=useDef];

@@ -19,15 +19,11 @@ extend lang::std::Id;
  * - See the ref example on how to obtain and propagate source locations.
  */
 
-AForm cst2ast(start[Form] sf) {
-//  Form f = sf.top; // remove layout before and after form
-//  return form("", [], src=f@\loc); 
-	return cst2ast(sf.top);
-}
+AForm cst2ast(start[Form] sf)
+  = cst2ast(sf.top);
 
-AForm cst2ast(sf: (Form)`form <Id name> { <Question* questions> }`) {
-  return form("<name>", [cst2ast(question) | question <- questions], src = sf@\loc); 
-}
+AForm cst2ast(sf: (Form)`form <Id name> { <Question* questions> }`)
+  = form("<name>", [cst2ast(question) | question <- questions], src = sf@\loc);
 
 
 AQuestion cst2ast(Question question) {
@@ -66,30 +62,26 @@ AConditional cst2ast(Conditional c) {
 AExpr cst2ast((Condition)`(<Expr e>)`)
 	= cst2ast(e);
 
-
-// TODO WM: Maybe refactor to separate function heads?
-//          Especially the `src=l@\loc` stuff seems repetitive.
 AExpr cst2ast(Expr e) {
   switch (e) {
-	case (Expr)`(<Expr expr>)`: return cst2ast(expr, src=e@\loc);
-    case (Expr)`<Id x>`: return ref(cst2ast(x), src=x@\loc);
-    case (Expr)`<Str literal>`: return lit(lit_string(readTextValueString(#str, "<literal>")), src=literal@\loc);
-    case (Expr)`<Int literal>`: return lit(lit_integer(readTextValueString(#int, "<literal>")), src=literal@\loc);
-    case (Expr)`<Bool literal>`: return lit(lit_boolean(readTextValueString(#bool, "<literal>")), src=literal@\loc);
-    case (Expr)`!<Expr expr>`: return not(cst2ast(expr), src=e@\loc);
-    case (Expr)`<Expr lhs>*<Expr rhs>`: return mult(cst2ast(lhs), cst2ast(rhs), src=e@\loc);
-    case (Expr)`<Expr lhs>/<Expr rhs>`: return div(cst2ast(lhs), cst2ast(rhs), src=e@\loc);
-    case (Expr)`<Expr lhs>+<Expr rhs>`: return plus(cst2ast(lhs), cst2ast(rhs), src=e@\loc);
-    case (Expr)`<Expr lhs>-<Expr rhs>`: return minus(cst2ast(lhs), cst2ast(rhs), src=e@\loc);
-    case (Expr)`<Expr lhs>&&<Expr rhs>`: return and(cst2ast(lhs), cst2ast(rhs), src=e@\loc);
-    case (Expr)`<Expr lhs>||<Expr rhs>`: return or(cst2ast(lhs), cst2ast(rhs), src=e@\loc);
-    case (Expr)`<Expr lhs>\><Expr rhs>`: return gt(cst2ast(lhs), cst2ast(rhs), src=e@\loc);
-    case (Expr)`<Expr lhs>\<<Expr rhs>`: return lt(cst2ast(lhs), cst2ast(rhs), src=e@\loc);
-    case (Expr)`<Expr lhs>\<=<Expr rhs>`: return lte(cst2ast(lhs), cst2ast(rhs), src=e@\loc);
-    case (Expr)`<Expr lhs>\>=<Expr rhs>`: return gte(cst2ast(lhs), cst2ast(rhs), src=e@\loc);
-    case (Expr)`<Expr lhs>==<Expr rhs>`: return equal(cst2ast(lhs), cst2ast(rhs), src=e@\loc);
-    case (Expr)`<Expr lhs>!=<Expr rhs>`: return not_equal(cst2ast(lhs), cst2ast(rhs), src=e@\loc);
-    
+	case (Expr)`(<Expr expr>)`: 			return cst2ast(expr, src=e@\loc);
+    case (Expr)`<Id x>`: 					return ref(cst2ast(x), src=x@\loc);
+    case (Expr)`<Str literal>`: 			return lit(lit_string(readTextValueString(#str, "<literal>")), src=literal@\loc);
+    case (Expr)`<Int literal>`: 			return lit(lit_integer(readTextValueString(#int, "<literal>")), src=literal@\loc);
+    case (Expr)`<Bool literal>`: 			return lit(lit_boolean(readTextValueString(#bool, "<literal>")), src=literal@\loc);
+    case (Expr)`!<Expr expr>`: 				return not(cst2ast(expr), src=e@\loc);
+    case (Expr)`<Expr lhs>*<Expr rhs>`: 	return mult(cst2ast(lhs), cst2ast(rhs), src=e@\loc);
+    case (Expr)`<Expr lhs>/<Expr rhs>`: 	return div(cst2ast(lhs), cst2ast(rhs), src=e@\loc);
+    case (Expr)`<Expr lhs>+<Expr rhs>`: 	return plus(cst2ast(lhs), cst2ast(rhs), src=e@\loc);
+    case (Expr)`<Expr lhs>-<Expr rhs>`: 	return minus(cst2ast(lhs), cst2ast(rhs), src=e@\loc);
+    case (Expr)`<Expr lhs>&&<Expr rhs>`: 	return and(cst2ast(lhs), cst2ast(rhs), src=e@\loc);
+    case (Expr)`<Expr lhs>||<Expr rhs>`: 	return or(cst2ast(lhs), cst2ast(rhs), src=e@\loc);
+    case (Expr)`<Expr lhs>\><Expr rhs>`: 	return gt(cst2ast(lhs), cst2ast(rhs), src=e@\loc);
+    case (Expr)`<Expr lhs>\<<Expr rhs>`: 	return lt(cst2ast(lhs), cst2ast(rhs), src=e@\loc);
+    case (Expr)`<Expr lhs>\<=<Expr rhs>`: 	return lte(cst2ast(lhs), cst2ast(rhs), src=e@\loc);
+    case (Expr)`<Expr lhs>\>=<Expr rhs>`: 	return gte(cst2ast(lhs), cst2ast(rhs), src=e@\loc);
+    case (Expr)`<Expr lhs>==<Expr rhs>`: 	return equal(cst2ast(lhs), cst2ast(rhs), src=e@\loc);
+    case (Expr)`<Expr lhs>!=<Expr rhs>`: 	return not_equal(cst2ast(lhs), cst2ast(rhs), src=e@\loc);
     
     default: throw "Unhandled expression: <e>";
   }
@@ -97,13 +89,12 @@ AExpr cst2ast(Expr e) {
 
 AType cst2ast(Type t) {
   switch(t) {
-    case (Type)`boolean`: return boolean(src = t@\loc);
-    case (Type)`string`: return string(src = t@\loc);
-    case (Type)`integer`: return integer(src = t@\loc);
+    case (Type)`boolean`: 	return boolean(src = t@\loc);
+    case (Type)`string`: 	return string(src = t@\loc);
+    case (Type)`integer`: 	return integer(src = t@\loc);
     default: throw "Unhandled type: <t>";
   };
 }
 
-AId cst2ast(Id x) {
-	return id("<x>", src=x@\loc);
-}
+AId cst2ast(Id x)
+  = id("<x>", src=x@\loc);
