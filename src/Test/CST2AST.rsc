@@ -1,7 +1,6 @@
 module Test::CST2AST
 
 import Test::Helper;
-
 import Syntax;
 
 test bool parsesVariable()
