@@ -72,17 +72,19 @@ list[AQuestion] flattenConditional(ifelse(AExpr condition, list[AQuestion] ifQue
  
  start[Form] rename(start[Form] f, loc useOrDef, str newName, RefGraph refGraph) {
    Id newId = [Id]newName;
+   if (<useOrDef, def> <- refGraph.useDef) {
+   	useOrDef = def;
+   }
+   set[loc] locs = {l | <l, useOrDef> <- refGraph.useDef} + {useOrDef};
    return visit(f) {
     case (Declaration)`<Id name> : <Type qtype>` => (Declaration)`<Id newId> : <Type qtype>`
     when 
-    <"<name>", useOrDef> <- refGraph.defs
+    	name@\loc in locs
 
    	case (Expr)`<Id name>` => (Expr)`<Id newId>` 
    	when
-
-       <"<name>", loc def> <- refGraph.defs,
-       <useOrDef, def> <- refGraph.useDef
-   }; 
+		name@\loc in locs
+   };
  } 
 
 start[Form] testRenaming(str input, loc useOrDef, str newName) {
