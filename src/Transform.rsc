@@ -5,8 +5,9 @@ import Resolve;
 import AST;
 import ParseTree;
 import CST2AST;
-import IO;
 import Set;
+
+import Test::Helper;
 
 /* 
  * Transforming QL forms
@@ -31,7 +32,6 @@ import Set;
  * Write a transformation that performs this flattening transformation.
  *
  */
- 
 AForm flatten(AForm f) {
   return form(f.name + "_Flattened", flattenQuestions(f.questions, lit(lit_boolean(true))));
 }
@@ -67,9 +67,6 @@ list[AQuestion] flattenConditional(ifelse(AExpr condition, list[AQuestion] ifQue
  * Use the results of name resolution to find the equivalence class of a name.
  *
  */
- 
- 
- 
  start[Form] rename(start[Form] f, loc useOrDef, str newName, RefGraph refGraph) {
    Id newId = [Id]newName;
    if (<useOrDef, def> <- refGraph.useDef) {
@@ -87,27 +84,3 @@ list[AQuestion] flattenConditional(ifelse(AExpr condition, list[AQuestion] ifQue
    };
  } 
 
-start[Form] testRenaming(str input, loc useOrDef, str newName) {
-	cst = parse(#start[Form], input);
-	ast = cst2ast(cst);
-	refGraph = resolve(ast);
-	println(refGraph);
-	set[loc] defs = refGraph.defs["bought"];
-	<myloc, _> = takeFirstFrom(defs);
-	println(myloc);
-	
-	return rename(cst, myloc, newName, refGraph);
-}
-/*
-test bool renamingWorks() {
-	str input = "form foo { \"x\" x : integer = 33}";
-	res = testRenaming(input, |unknown:///|(15,1,<1,15>,<1,16>), "boom");
-	println(res);
-	return true;
-}*/
-
-test bool simpleExampleRenaming() {
-	res = testRenaming(readFile(|project://QL/examples/simple_example.myql|), |unknown:///|(280,6,<8,36>,<8,42>), "superman");
-	println(res);
-	return true;
-}
