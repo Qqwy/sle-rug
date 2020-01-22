@@ -96,6 +96,7 @@
     function alterVisibilityofConditionalBlocks(prop, value){
         console.log("Showing/hiding", prop, value);
         let affected_fields = document.querySelectorAll("[data-ql-if='" + prop + "']");
+        console.log(affected_fields);
         affected_fields.forEach(function(field) {
             console.log("Showing/hiding", field);
 
@@ -106,6 +107,7 @@
             }
         });
         let affected_fields2 = document.querySelectorAll("[data-ql-else='" + prop + "']");
+        console.log(affected_fields2);
         affected_fields2.forEach(function(field) {
             console.log("Showing/hiding", field);
 

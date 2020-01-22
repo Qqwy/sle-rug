@@ -65,11 +65,11 @@ list[HTML5Node] compile(conditional(\if(AExpr condition, list[AQuestion] questio
 list[HTML5Node] compile(conditional(\ifelse(AExpr condition, list[AQuestion] if_questions, list[AQuestion] else_questions)))
 	= [
 		div([
-			html5attr("data-ql-if", conditionFieldName(condition)),
+			html5attr("data-ql-if", unescapedConditionFieldName(condition)),
 			*compile(if_questions)]
 		),
 		div([
-			html5attr("data-ql-else", conditionFieldName(condition)),
+			html5attr("data-ql-else", unescapedConditionFieldName(condition)),
 			*compile(else_questions)]
 		)
 	];

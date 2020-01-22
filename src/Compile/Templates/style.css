@@ -80,8 +80,6 @@ label {
     overflow: hidden;
     /* max-height: 100%; */
     transition-duration: .2s;
-    opacity: 1;
-    transform: scaleY(1);
     transform-origin: top;
 }
 
@@ -89,4 +87,11 @@ label {
     /* max-height: 0px; */
     opacity: 0;
     transform: scaleY(0);
+    height: 0;
+}
+
+[data-ql-if].visible, [data-ql-else].visible {
+    opacity: 1;
+    transform: scaleY(1);
+    height: auto;
 }
