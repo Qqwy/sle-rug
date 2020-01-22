@@ -35,6 +35,41 @@ str initialEnv(AForm f)
 	'	ql_questions = <initialValues(f)>;
 	'}
 	'";
+	
+str initialValues(AForm f) {
+	question_values = initialQuestions(f);
+	conditional_values = initialConditionals(f);
+	str combined = intercalate(",\n", question_values + conditional_values);
+	return"{\n<combined>\n}";
+}
+// Transforms all simple and computed questions into string keys representing that question,
+// filling it with the default value.
+list[str] initialQuestions(AForm f) {
+	questions = initialQuestionsMap(f);
+	return ["<questionFieldName(label)> : <defaultValue(questions[label])>" | label <- questions];
+}
+
+map[AId name, AType \type] initialQuestionsMap(AForm f)
+  = (label: qtype | /simple_question(_, AId label, AType qtype)      := f)
+  + (label: qtype | /computed_question(_, AId label, AType qtype, _) := f)
+  ;
+
+// Transforms all conditionals into string keys representing that conditional, filling it with the default value.
+list[str] initialConditionals(AForm f) {
+	conditionals = initialConditionalsMap(f);
+	return ["<conditionFieldName(conditional)> : <defaultValue(conditionals[conditional])>" | conditional <- conditionals];
+}
+
+map[AExpr condition, AType \type] initialConditionalsMap(AForm f) 
+  = (condition: boolean() | /\if(AExpr condition, _)      := f)
+  + (condition: boolean() | /ifelse(AExpr condition, _, _) := f)
+  ;
+
+
+str defaultValue(boolean()) = "false";
+str defaultValue(integer()) = "0";
+str defaultValue(string()) = "\"\"";
+
 
 str update(AForm f) 
   = "
@@ -73,40 +108,6 @@ str update(\conditional(\ifelse(AExpr condition, list[AQuestion] if_questions, l
 	'	<update(else_questions)>}
 	";
 
-
-str initialValues(AForm f) {
-	question_values = initialQuestions(f);
-	conditional_values = initialConditionals(f);
-	str combined = intercalate(",\n", question_values + conditional_values);
-	return"{\n<combined>\n}";
-}
-// Transforms all simple and computed questions into string keys representing that question,
-// filling it with the default value.
-list[str] initialQuestions(AForm f) {
-	questions = initialQuestionsMap(f);
-	return ["<questionFieldName(label)> : <defaultValue(questions[label])>" | label <- questions];
-}
-
-map[AId name, AType \type] initialQuestionsMap(AForm f)
-  = (label: qtype | /simple_question(_, AId label, AType qtype)      := f)
-  + (label: qtype | /computed_question(_, AId label, AType qtype, _) := f)
-  ;
-
-// Transforms all conditionals into string keys representing that conditional, filling it with the default value.
-list[str] initialConditionals(AForm f) {
-	conditionals = initialConditionalsMap(f);
-	return ["<conditionFieldName(conditional)> : <defaultValue(conditionals[conditional])>" | conditional <- conditionals];
-}
-
-map[AExpr condition, AType \type] initialConditionalsMap(AForm f) 
-  = (condition: boolean() | /\if(AExpr condition, _)      := f)
-  + (condition: boolean() | /ifelse(AExpr condition, _, _) := f)
-  ;
-
-
-str defaultValue(boolean()) = "false";
-str defaultValue(integer()) = "0";
-str defaultValue(string()) = "\"\"";
 
 // Turns a QL AST expression into its JS runtime environment equivalent.
 str toJSExpr(ref(AId id))					= "ql_questions[<questionFieldName(id)>]";
