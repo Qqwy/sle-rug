@@ -110,20 +110,20 @@ str update(\conditional(\ifelse(AExpr condition, list[AQuestion] if_questions, l
 
 
 // Turns a QL AST expression into its JS runtime environment equivalent.
-str toJSExpr(ref(AId id))					= "ql_questions[<questionFieldName(id)>]";
-str toJSExpr(\lit(ALit literal))			= toJSLit(literal);
-str toJSExpr(not(AExpr expr)) 				= "!<toJSExpr(expr)>";
-str toJSExpr(mult(AExpr lhs, AExpr rhs)) 	= "<toJSExpr(lhs)> * <toJSExpr(rhs)>";
-str toJSExpr(div(AExpr lhs, AExpr rhs)) 	= "<toJSExpr(lhs)> / <toJSExpr(rhs)>";
-str toJSExpr(plus(AExpr lhs, AExpr rhs)) 	= "<toJSExpr(lhs)> + <toJSExpr(rhs)>";
-str toJSExpr(minus(AExpr lhs, AExpr rhs)) 	= "<toJSExpr(lhs)> - <toJSExpr(rhs)>";
-str toJSExpr(and(AExpr lhs, AExpr rhs)) 	= "<toJSExpr(lhs)> && <toJSExpr(rhs)>";
-str toJSExpr(or(AExpr lhs, AExpr rhs)) 	= "<toJSExpr(lhs)> || <toJSExpr(rhs)>";
-str toJSExpr(gt(AExpr lhs, AExpr rhs)) 	= "<toJSExpr(lhs)> \> <toJSExpr(rhs)>";
-str toJSExpr(lt(AExpr lhs, AExpr rhs)) 	= "<toJSExpr(lhs)> \< <toJSExpr(rhs)>";
-str toJSExpr(gte(AExpr lhs, AExpr rhs)) 	= "<toJSExpr(lhs)> \>= <toJSExpr(rhs)>";
-str toJSExpr(lte(AExpr lhs, AExpr rhs)) 	= "<toJSExpr(lhs)> \<= <toJSExpr(rhs)>";
-str toJSExpr(equal(AExpr lhs, AExpr rhs)) 	= "<toJSExpr(lhs)> === <toJSExpr(rhs)>";
+str toJSExpr(ref(AId id))						= "ql_questions[<questionFieldName(id)>]";
+str toJSExpr(\lit(ALit literal))				= toJSLit(literal);
+str toJSExpr(not(AExpr expr)) 					= "!<toJSExpr(expr)>";
+str toJSExpr(mult(AExpr lhs, AExpr rhs)) 		= "<toJSExpr(lhs)> * <toJSExpr(rhs)>";
+str toJSExpr(div(AExpr lhs, AExpr rhs)) 		= "<toJSExpr(lhs)> / <toJSExpr(rhs)>";
+str toJSExpr(plus(AExpr lhs, AExpr rhs)) 		= "<toJSExpr(lhs)> + <toJSExpr(rhs)>";
+str toJSExpr(minus(AExpr lhs, AExpr rhs)) 		= "<toJSExpr(lhs)> - <toJSExpr(rhs)>";
+str toJSExpr(and(AExpr lhs, AExpr rhs)) 		= "<toJSExpr(lhs)> && <toJSExpr(rhs)>";
+str toJSExpr(or(AExpr lhs, AExpr rhs)) 			= "<toJSExpr(lhs)> || <toJSExpr(rhs)>";
+str toJSExpr(gt(AExpr lhs, AExpr rhs)) 			= "<toJSExpr(lhs)> \> <toJSExpr(rhs)>";
+str toJSExpr(lt(AExpr lhs, AExpr rhs)) 			= "<toJSExpr(lhs)> \< <toJSExpr(rhs)>";
+str toJSExpr(gte(AExpr lhs, AExpr rhs)) 		= "<toJSExpr(lhs)> \>= <toJSExpr(rhs)>";
+str toJSExpr(lte(AExpr lhs, AExpr rhs)) 		= "<toJSExpr(lhs)> \<= <toJSExpr(rhs)>";
+str toJSExpr(equal(AExpr lhs, AExpr rhs)) 		= "<toJSExpr(lhs)> === <toJSExpr(rhs)>";
 str toJSExpr(not_equal(AExpr lhs, AExpr rhs)) 	= "<toJSExpr(lhs)> !== <toJSExpr(rhs)>";
 
 // Literal strings receive an extra `"` surrounding them, and are escaped.
