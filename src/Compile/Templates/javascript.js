@@ -85,6 +85,7 @@
     }
 
     function render(ql_questions) {
+        console.log(ql_questions);
         for(prop in ql_questions) {
             let value = ql_questions[prop];
             alterVisibilityofConditionalBlocks(prop, value);
@@ -93,8 +94,10 @@
     }
 
     function alterVisibilityofConditionalBlocks(prop, value){
+        console.log("Showing/hiding", prop, value);
         let affected_fields = document.querySelectorAll("[data-ql-if='" + prop + "']");
         affected_fields.forEach(function(field) {
+            console.log("Showing/hiding", field);
 
             if(value) {
                 field.className = "visible";
@@ -104,6 +107,7 @@
         });
         let affected_fields2 = document.querySelectorAll("[data-ql-else='" + prop + "']");
         affected_fields2.forEach(function(field) {
+            console.log("Showing/hiding", field);
 
             if(value) {
                 field.className = "hidden";
