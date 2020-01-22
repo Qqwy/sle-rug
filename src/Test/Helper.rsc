@@ -54,7 +54,10 @@ void compileFromString(str inputForm, loc src) {
         ast.src = src;
         UseDef useDef = resolve(ast).useDef;
         set[Message] msgs = check(ast, <collect(ast), useDef>);
-        return compile(ast);
+        set[Message] errors = {E | E <- msgs, error(_) := E || error(_, _) := E};
+        if (errors == {}) {
+	        return compile(ast);
+        }
       }
   throw {error("Not a form", t@\loc)};
 }

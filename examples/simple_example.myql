@@ -3,7 +3,7 @@ form taxOfficeExample {
   "did you really buy?" bought2 : integer
   "What is your name?" name : string
   
-  if(name == "foo" && bought != 0 && bought2 == 1) {
+  if(name == "Tim" && bought != 0 && bought2 == 1) {
     "did you really really buy?" bought3 : boolean
     "some fun?" bought4 : boolean = bought > 3 && bought3
   }

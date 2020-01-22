@@ -43,7 +43,8 @@ void main() {
         AForm ast = cst2ast(pt);
         UseDef useDef = resolve(ast).useDef;
         set[Message] msgs = check(ast, <collect(ast), useDef>);
-        if (msgs == {}) {
+        set[Message] errors = {E | E <- msgs, error(_) := E || error(_, _) := E};
+        if (errors == {}) {
           compile(ast);
         }
         return msgs;
