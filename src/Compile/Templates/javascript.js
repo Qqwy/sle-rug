@@ -14,7 +14,7 @@
         let fields = document.querySelectorAll("[data-ql-question] > input");
         for (var i = 0; i < fields.length; ++i) {
             let field = fields[i];
-            field.addEventListener("change", triggerFormChange);
+            field.addEventListener("input", triggerFormChange);
         }
         // Properly initialize all conditionals:
         update(ql_questions);

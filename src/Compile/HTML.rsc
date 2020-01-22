@@ -46,14 +46,14 @@ HTML5Node compile(simple_question(str qname, AId var, AType qtype))
   = div(
   		html5attr("data-ql-question", var.name),
   		label(\for(unescapedQuestionFieldName(var)), qname),
-		input(\type(formInputType(qtype)), name(unescapedQuestionFieldName(var)))
+		input(\type(formInputType(qtype)), name(unescapedQuestionFieldName(var)), id(unescapedQuestionFieldName(var)))
   	);
 
 HTML5Node compile(computed_question(str qname, AId var, AType qtype, _))
   = div(
   		html5attr("data-ql-question", var.name),
   		label(\for(unescapedQuestionFieldName(var)), qname),
-		input(\type(formInputType(qtype)), name(unescapedQuestionFieldName(var)), disabled("disabled"))
+		input(\type(formInputType(qtype)), name(unescapedQuestionFieldName(var)), id(unescapedQuestionFieldName(var)), disabled("disabled"))
   	);
 
 list[HTML5Node] compile(conditional(\if(AExpr condition, list[AQuestion] questions)))
