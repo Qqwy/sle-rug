@@ -28,6 +28,7 @@ HTML5Node compile(AForm f, loc filename)
 HTML5Node htmlTemplateHead(str cssloc)
 	= head(
 		meta(charset("utf-8")),
+		meta(name("viewport"), content("width=device-width, initial-scale=1.0")), 
 		link(\rel("stylesheet"), href(cssloc))
 	);
 
