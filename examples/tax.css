@@ -23,10 +23,10 @@ input:hover, input:focus {
 }
 
 input[type=checkbox] {
-    height: 38px;
+    display: none;
 }
 
-input[type=checkbox]:hover, input[type=checkbox]:focus {
+input[type=checkbox] + label:hover, input[type=checkbox]:focus + label, label:hover + input[type=checkbox] + label {
     transform: scale(1.05);
 }
 
@@ -34,7 +34,18 @@ input[type=text], input[type=number] {
     border: 1px solid lightgrey;
 }
 
-input[type=checkbox]::before {
+label {
+		display: inline-block;
+	  margin-top: 1.5em;
+	  max-width: 30em;
+	  width: 45%;
+    cursor: pointer;
+}
+
+input[type=checkbox] + label {
+    overflow: hidden;
+}
+input[type=checkbox] + label::before {
     content: "\2713";
     background-color: white;
     color: rgba(255,255,255,0);
@@ -53,21 +64,17 @@ input[type=checkbox]::before {
     transition-duration: .2s;
 }
 
-input[type=checkbox]:disabled::before {
-    background-color: #eee;
+input[type=checkbox]:disabled + label::before {
+    background-color: #ccc;
 }
 
-input[type=checkbox]:checked::before {
-    font-size: 36px;
+input[type=checkbox]:checked + label::before {
+    font-size: 42px;
     color: #0bb;
 }
 
-label {
-		display: inline-block;
-	  margin-top: 1.5em;
-	  max-width: 30em;
-	  width: 45%;
-    cursor: pointer;
+input[type=checkbox]:disabled:checked + label::before {
+    color: #999;
 }
 
 
