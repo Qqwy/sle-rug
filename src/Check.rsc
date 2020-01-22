@@ -2,6 +2,7 @@ module Check
 
 import AST;
 import Resolve;
+
 import Message; // see standard library
 
 

@@ -1,9 +1,10 @@
 module Test::Eval
 
 import Test::Helper;
+
 import Eval;
-import Syntax;
 import AST;
+import Syntax;
 
 VEnv buildEnvFromInput(str input) {
 	ast = parse2ast(#start[Form], input);

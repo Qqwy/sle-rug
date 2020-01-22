@@ -1,72 +1,79 @@
 module Compile::HTML
 
+/*
+ * This module compiles the QL file to a HTML document which references
+ * the CSS and JavaScript that is also used during the compilation process.
+ * 
+ * Rascal's built-in 'lang::html5::DOM' was used to generate the HTML.
+ */
+
+import Compile::Helper;
 import AST;
 import Resolve;
+
 import lang::html5::DOM; // see standard library
-import Compile::Javascript; // We use some Javascript-compilation-based names in our HTML attribute values.
 
-str compile(AForm f, loc filename)
-  = "\<!DOCTYPE html\>" + lang::html5::DOM::toString(htmlCompile(f, f.src));
+str compile(AForm f)
+  = "\<!DOCTYPE html\>" + lang::html5::DOM::toString(compile(f, f.src));
 
-HTML5Node htmlCompile(AForm f, loc filename) {
-	str cssloc = filename[extension="css"].file;
-	str jsloc = filename[extension="js"].file;
-	HTML5Node res = 
-	html(
-		head(
-			meta(charset("utf-8")),
-			link(\rel("stylesheet"), href(cssloc))
-		), 
+HTML5Node compile(AForm f, loc filename)
+	= html(
+		htmlTemplateHead(filename[extension="css"].file),
 		body(
-			form([
-				name(f.name), 
-				action("#"), 
-				h1(f.name),
-				*htmlCompile(f.questions)
-				]
-			),
-			script(src(jsloc))
+			htmlTemplateForm(f),
+			script(src(filename[extension="js"].file))
 		)
 	);
-	return res;
-}
 
+HTML5Node htmlTemplateHead(str cssloc)
+	= head(
+		meta(charset("utf-8")),
+		link(\rel("stylesheet"), href(cssloc))
+	);
 
-list[HTML5Node] htmlCompile(list[AQuestion] questions)
-  = [*htmlCompile(question) | question <- questions];
+HTML5Node htmlTemplateForm(AForm f)
+	= form([
+		name(f.name), 
+		action("#"), 
+		h1(f.name),
+		*compile(f.questions)
+	]);
 
-HTML5Node htmlCompile(simple_question(str qname, AId var, AType qtype))
+list[HTML5Node] compile(list[AQuestion] questions)
+  = [*compile(question) | question <- questions];
+
+HTML5Node compile(simple_question(str qname, AId var, AType qtype))
   = div(
   		html5attr("data-ql-question", var.name),
   		label(\for(unescapedQuestionFieldName(var)), qname),
-		input(\type(ATypeToHTMLInputType(qtype)), name(unescapedQuestionFieldName(var)))
+		input(\type(formInputType(qtype)), name(unescapedQuestionFieldName(var)))
   	);
 
-HTML5Node htmlCompile(computed_question(str qname, AId var, AType qtype, _))
+HTML5Node compile(computed_question(str qname, AId var, AType qtype, _))
   = div(
   		html5attr("data-ql-question", var.name),
   		label(\for(unescapedQuestionFieldName(var)), qname),
-		input(\type(ATypeToHTMLInputType(qtype)), name(unescapedQuestionFieldName(var)), disabled("disabled"))
+		input(\type(formInputType(qtype)), name(unescapedQuestionFieldName(var)), disabled("disabled"))
   	);
 
-list[HTML5Node] htmlCompile(conditional(\if(AExpr condition, list[AQuestion] questions)))
+list[HTML5Node] compile(conditional(\if(AExpr condition, list[AQuestion] questions)))
 	= [div([
-		html5attr("data-ql-if", UnescapedConditionFieldName(condition)),
-		*htmlCompile(questions)]
+		html5attr("data-ql-if", unescapedConditionFieldName(condition)),
+		*compile(questions)]
 	)];
 
-list[HTML5Node] htmlCompile(conditional(\ifelse(AExpr condition, list[AQuestion] if_questions, list[AQuestion] else_questions)))
+list[HTML5Node] compile(conditional(\ifelse(AExpr condition, list[AQuestion] if_questions, list[AQuestion] else_questions)))
 	= [
 		div([
-			html5attr("data-ql-if", htmlEscapedConditionFieldName(condition)),
-			*htmlCompile(if_questions)]
+			html5attr("data-ql-if", conditionFieldName(condition)),
+			*compile(if_questions)]
 		),
 		div([
-			html5attr("data-ql-else", htmlEscapedConditionFieldName(condition)),
-			*htmlCompile(else_questions)]
+			html5attr("data-ql-else", conditionFieldName(condition)),
+			*compile(else_questions)]
 		)
 	];
 
-str ATypeToHTMLInputType(boolean()) = "checkbox";
-str ATypeToHTMLInputType(integer()) = "number";
-str ATypeToHTMLInputType(string())  = "text";
+str formInputType(boolean()) = "checkbox";
+str formInputType(integer()) = "number";
+str formInputType(string())  = "text";

@@ -1,13 +1,12 @@
 module Transform
 
-import Syntax;
-import Resolve;
 import AST;
-import ParseTree;
 import CST2AST;
-import Set;
+import ParseTree;
+import Resolve;
+import Syntax;
 
-import Test::Helper;
+import Set;
 
 /* 
  * Transforming QL forms

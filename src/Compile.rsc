@@ -1,15 +1,16 @@
 module Compile
 
+import Compile::HTML;
+import Compile::Javascript;
+import Compile::CSS;
 import AST;
 import Resolve;
+
 import IO;
 import lang::html5::DOM; // see standard library
 import List; // intercalate
 import String; // escape
 
-import Compile::HTML;
-import Compile::Javascript;
-import Compile::CSS;
 
 /*
  * Implement a compiler for QL to HTML and Javascript
@@ -31,7 +32,7 @@ void compile(AForm f) {
 	str css = Compile::CSS::compile(f);
   	writeFile(f.src[extension="css"].top, css);
 
-  	str html = Compile::HTML::compile(f, f.src);
+  	str html = Compile::HTML::compile(f);
   	writeFile(f.src[extension="html"].top, html);
 }
 

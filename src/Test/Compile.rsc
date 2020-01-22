@@ -1,9 +1,10 @@
 module Test::Compile
 
 import Test::Helper;
+
 import Compile;
 
-import IO; // readFile
+import IO;
 
 
 // This test succeeds as long as no exceptions occur during compilation.

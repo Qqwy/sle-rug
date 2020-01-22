@@ -2,12 +2,12 @@ module Test::Helper
 
 import Syntax;
 import AST;
-import ParseTree;
-
 import CST2AST; // cst2ast
 import Resolve; // resolve
 import Check;   // collect, check
 import Compile; // compile
+
+import ParseTree;
 
 /* Parses a string to the CST and then immediately to the AST. */
 &AST <: node parse2ast(type[&T<:Tree] begin, str input)

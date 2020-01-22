@@ -1,17 +1,22 @@
 module IDE
 
-import Syntax;
+/*
+ * Registers the QL language to Eclipse,
+ * so that the checker is run on edit, 
+ * and the compiler is run on file-save.
+ */
+
 import AST;
-import CST2AST;
-import Resolve;
 import Check;
 import Compile;
-
-import util::IDE;
-import Message;
-import ParseTree;
+import CST2AST;
+import Resolve;
+import Syntax;
 
 import IO;
+import Message;
+import ParseTree;
+import util::IDE;
 
 private str MyQL ="MyQL";
 

@@ -127,7 +127,7 @@
 
     // To be filled in by the compilation code:
     // initQuestions(), which sets up the `ql_questions` variable
-    "{{initQuestions}}"
+    "{{initialEnv}}"
 
     // update(ql_questions), which recalculates all computed questions and conditionals based on the current values.
     "{{update}}"

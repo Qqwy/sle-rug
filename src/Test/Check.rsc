@@ -1,8 +1,9 @@
 module Test::Check
 
 import Test::Helper;
-import Syntax;
+
 import AST;
+import Syntax;
 
 
 test bool allowsPlusIntExpr()
