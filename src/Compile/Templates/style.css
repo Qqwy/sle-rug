@@ -45,6 +45,7 @@ label {
 input[type=checkbox] + label {
     overflow: hidden;
 }
+
 input[type=checkbox] + label::before {
     content: "\2713";
     background-color: white;
@@ -77,21 +78,14 @@ input[type=checkbox]:disabled:checked + label::before {
     color: #999;
 }
 
-
-/* .hidden { */
-/* 	  display: none; */
-/* } */
-
 [data-ql-if], [data-ql-else] {
     display: block;
     overflow: hidden;
-    /* max-height: 100%; */
     transition-duration: .2s;
     transform-origin: top;
 }
 
 [data-ql-if].hidden , [data-ql-else].hidden {
-    /* max-height: 0px; */
     opacity: 0;
     transform: scaleY(0);
     height: 0;
